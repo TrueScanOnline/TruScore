@@ -53,7 +53,7 @@ export default function AccountPlanScreen() {
       </View>
 
       <Text style={[styles.futureNote, { color: emerald.muted }]} testID="account-plan-future-note">
-        {t('account.planFutureNote')}
+        {t('account.planPaidUnavailableNote')}
       </Text>
 
       {/* Explicit guard: purchase UI stays off while the MVP gate is false. */}

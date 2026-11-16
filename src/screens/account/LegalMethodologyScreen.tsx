@@ -46,6 +46,10 @@ export default function LegalMethodologyScreen() {
       onBack={() => navigation.goBack()}
       testID="account-legal-screen"
     >
+      <Text style={[styles.intro, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+        {t('account.legalIntro')}
+      </Text>
+
       <AccountSection title={t('account.legalDocuments')}>
         <AccountRow
           icon="shield-outline"
@@ -58,6 +62,7 @@ export default function LegalMethodologyScreen() {
           onPress={() => {
             void openExternalOrBlock('privacy');
           }}
+          accessibilityHint={t('account.a11yLegalDocument')}
           testID="account-legal-privacy"
         />
         <AccountRow
@@ -71,6 +76,7 @@ export default function LegalMethodologyScreen() {
           onPress={() => {
             void openExternalOrBlock('terms');
           }}
+          accessibilityHint={t('account.a11yLegalDocument')}
           testID="account-legal-terms"
           isLast
         />
@@ -150,6 +156,9 @@ export default function LegalMethodologyScreen() {
         <Text style={[styles.modalText, { color: colors.textSecondary }]}>
           {t('infoModal.trustScore.dataSourceNote')}
         </Text>
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          {t('account.legalSignalsNote')}
+        </Text>
       </InfoModal>
 
       <InfoModal
@@ -183,6 +192,11 @@ export default function LegalMethodologyScreen() {
 }
 
 const styles = StyleSheet.create({
+  intro: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
   modalHeading: {
     fontSize: 15,
     fontWeight: '600',

@@ -41,6 +41,13 @@ export default function AccountRow({
   const hasSwitch = typeof switchValue === 'boolean' && typeof onSwitchChange === 'function';
   const ink = destructive ? '#C44747' : emerald.ink;
   const iconColor = destructive ? '#C44747' : emerald.action;
+  const handlePress = () => {
+    if (hasSwitch && !disabled) {
+      onSwitchChange!(!switchValue);
+      return;
+    }
+    onPress?.();
+  };
 
   return (
     <TouchableOpacity
@@ -49,12 +56,12 @@ export default function AccountRow({
         !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: emerald.line },
         disabled && styles.disabled,
       ]}
-      onPress={onPress}
-      disabled={!interactive && !hasSwitch}
-      activeOpacity={interactive ? 0.7 : 1}
+      onPress={handlePress}
+      disabled={disabled || (!interactive && !hasSwitch)}
+      activeOpacity={interactive || hasSwitch ? 0.7 : 1}
       accessibilityRole={hasSwitch ? 'switch' : interactive ? 'button' : 'text'}
       accessibilityState={hasSwitch ? { checked: switchValue, disabled } : { disabled }}
-      accessibilityLabel={accessibilityLabel || label}
+      accessibilityLabel={accessibilityLabel || (value ? `${label}, ${value}` : label)}
       accessibilityHint={accessibilityHint}
       testID={testID}
     >
@@ -63,8 +70,14 @@ export default function AccountRow({
           <Ionicons name={icon} size={20} color={iconColor} />
         </View>
         <View style={styles.copy}>
-          <Text style={[styles.label, { color: ink }]}>{label}</Text>
-          {value ? <Text style={[styles.value, { color: emerald.muted }]}>{value}</Text> : null}
+          <Text style={[styles.label, { color: ink }]} maxFontSizeMultiplier={1.35}>
+            {label}
+          </Text>
+          {value ? (
+            <Text style={[styles.value, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+              {value}
+            </Text>
+          ) : null}
         </View>
       </View>
       {hasSwitch ? (
@@ -74,7 +87,8 @@ export default function AccountRow({
           disabled={disabled}
           trackColor={{ false: emerald.line, true: emerald.action }}
           thumbColor="#fff"
-          accessibilityLabel={accessibilityLabel || label}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         />
       ) : showChevron || interactive ? (
         <Ionicons name="chevron-forward" size={18} color={emerald.muted} />

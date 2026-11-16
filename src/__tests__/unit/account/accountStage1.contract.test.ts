@@ -72,11 +72,12 @@ describe('Account Stage 1 contracts', () => {
     expect(home).toMatch(/account\.sectionPersonal/);
     expect(home).toMatch(/account\.sectionAppSettings/);
     expect(home).toMatch(/account\.sectionPrivacySupport/);
-    expect(home).toMatch(/account\.preferences/);
-    expect(home).toMatch(/disabled/);
+    expect(home).toMatch(/settings\.units/);
+    expect(home).toMatch(/setUnits/);
+    expect(home).not.toMatch(/account\.preferences/);
+    expect(home).not.toMatch(/account\.comingSoon/);
     expect(home).not.toMatch(/Log Out|Logout|Sign in|Sign up/i);
     expect(home).not.toMatch(/setAnalyticsEnabled/);
-    expect(home).not.toMatch(/setUnits/);
     expect(home).not.toMatch(/openSource/);
     expect(home).not.toMatch(/ContributionCelebrationPreview/);
   });
@@ -85,6 +86,7 @@ describe('Account Stage 1 contracts', () => {
     const profile = read('src/screens/account/AccountProfileScreen.tsx');
     expect(profile).toMatch(/account\.guest/);
     expect(profile).toMatch(/account\.profileLocalStorageNote/);
+    expect(profile).toMatch(/account\.profileLimitsNote/);
     expect(profile).not.toMatch(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
     expect(profile).not.toMatch(/Logout|Log Out|delete account/i);
     expect(profile).not.toMatch(/evidenceAuthority|contributor/i);
@@ -96,19 +98,21 @@ describe('Account Stage 1 contracts', () => {
     expect(ENABLE_PREMIUM_GATING).toBe(false);
     const plan = read('src/screens/account/AccountPlanScreen.tsx');
     expect(plan).toMatch(/account\.planFreeName/);
-    expect(plan).toMatch(/account\.planFutureNote/);
+    expect(plan).toMatch(/account\.planPaidUnavailableNote/);
     expect(plan).not.toMatch(/\bUpgrade Now\b|\bStart Trial\b|\bSubscribe\b|\bRestore Purchases\b|\bManage Billing\b/i);
     expect(plan).not.toMatch(/from ['"].*qonversion|purchaseProduct\(|restorePurchases\(/i);
     expect(plan).not.toMatch(/useSubscriptionStore/);
     expect(plan).toMatch(/isMvpSubscriptionAndPaywallEnabled/);
   });
 
-  test('language remains English-only and Preferences stay non-interactive', () => {
+  test('language remains English-only and units are display-only', () => {
     expect([...MVP_ENABLED_UI_LOCALES]).toEqual(['en']);
     const home = read('src/screens/account/AccountHomeScreen.tsx');
     expect(home).toMatch(/account\.languageEnglish/);
     expect(home).not.toMatch(/setLanguage\(/);
-    expect(home).toMatch(/account\.comingSoon/);
+    expect(home).toMatch(/settings\.units/);
+    expect(home).toMatch(/setUnits/);
+    expect(home).not.toMatch(/calculateTrustScore|trust_score|pillar/i);
   });
 
   test('privacy clears use targeted store APIs only', () => {
@@ -116,9 +120,12 @@ describe('Account Stage 1 contracts', () => {
     expect(privacy).toMatch(/clearHistory\(/);
     expect(privacy).toMatch(/clearFavorites\(/);
     expect(privacy).toMatch(/clearCache\(/);
+    expect(privacy).toMatch(/account\.privacyIntro/);
+    expect(privacy).toMatch(/account\.requestDataHelp/);
     expect(privacy).not.toMatch(/AsyncStorage\.clear/);
     expect(privacy).not.toMatch(/multiRemove/);
     expect(privacy).not.toMatch(/contributor|CREDENTIAL_KEY|evidenceAuthority/);
+    expect(privacy).not.toMatch(/Delete Account|deleteAccount/i);
   });
 
   test('analytics consent is not silently changed by Account redesign', () => {

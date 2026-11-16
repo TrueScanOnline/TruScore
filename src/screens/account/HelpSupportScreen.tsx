@@ -55,7 +55,9 @@ export default function HelpSupportScreen() {
       onBack={() => navigation.goBack()}
       testID="account-help-screen"
     >
-      <Text style={[styles.intro, { color: emerald.muted }]}>{t('account.helpIntro')}</Text>
+      <Text style={[styles.intro, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+        {t('account.helpIntro')}
+      </Text>
 
       <AccountSection title={t('account.contactRveel')}>
         <AccountRow
@@ -73,6 +75,7 @@ export default function HelpSupportScreen() {
                   Alert.alert(t('settings.helpSupport'), t('account.supportEmailMissing'));
                 }
           }
+          accessibilityHint={t('account.a11yContactSupport')}
           testID="account-contact-email"
         />
         <AccountRow
@@ -97,6 +100,7 @@ export default function HelpSupportScreen() {
                   Alert.alert(t('settings.helpSupport'), t('account.supportEmailMissing'));
                 }
           }
+          accessibilityHint={t('account.a11yReportProblem')}
           testID="account-report-problem"
           isLast
         />
@@ -114,11 +118,17 @@ export default function HelpSupportScreen() {
 
       {aboutOpen ? (
         <View style={[styles.aboutCard, resultEmeraldCard(!!darkMode)]} testID="account-about-body">
-          <Text style={[styles.aboutTitle, { color: emerald.ink }]}>
+          <Text style={[styles.aboutTitle, { color: emerald.ink }]} maxFontSizeMultiplier={1.35}>
             {productIdentity.displayName}
           </Text>
-          <Text style={[styles.aboutBody, { color: emerald.muted }]}>
+          <Text style={[styles.aboutBody, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
             {t('account.aboutBody', { version })}
+          </Text>
+          <Text
+            style={[styles.aboutBody, { color: emerald.muted, marginTop: 10 }]}
+            maxFontSizeMultiplier={1.35}
+          >
+            {t('account.helpEmailOpensOnly')}
           </Text>
         </View>
       ) : null}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import AccountScreenShell from '../../components/account/AccountScreenShell';
@@ -10,6 +10,10 @@ import { useScanStore } from '../../store/useScanStore';
 import { clearCache, getCacheSize } from '../../services/cacheService';
 import { isLegalDestinationReady, legalDestinations } from '../../config/legalDestinations';
 import { openLegalDestination } from '../../utils/openLegalDestination';
+import { productIdentity } from '../../config/productIdentity';
+import { resultEmeraldTone } from '../../theme/resultPresentation';
+import { useTheme } from '../../theme';
+import { openAssessmentReport } from '../../utils/openAssessmentReport';
 
 /**
  * Privacy & Data — targeted local clears only.
@@ -18,9 +22,12 @@ import { openLegalDestination } from '../../utils/openLegalDestination';
 export default function PrivacyDataScreen() {
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { darkMode } = useTheme();
+  const emerald = resultEmeraldTone(!!darkMode);
   const { clearFavorites, favorites } = useFavoritesStore();
   const { clearHistory, recentScans } = useScanStore();
   const [cacheSize, setCacheSize] = useState(0);
+  const supportConfigured = productIdentity.supportEmail.trim().length > 0;
 
   const refreshCacheSize = useCallback(async () => {
     try {
@@ -108,12 +115,33 @@ export default function PrivacyDataScreen() {
     }
   };
 
+  const handleDataRequest = () => {
+    if (!supportConfigured) {
+      Alert.alert(t('account.privacyData'), t('account.supportEmailMissing'));
+      return;
+    }
+    void openAssessmentReport({
+      subject: t('account.supportSubjectDataRequest'),
+      fields: {
+        errorType: 'other',
+      },
+      missingMessage: t('account.supportEmailMissing'),
+      failedMessage: t('account.supportEmailFailed', {
+        email: productIdentity.supportEmail.trim(),
+      }),
+    });
+  };
+
   return (
     <AccountScreenShell
       title={t('account.privacyData')}
       onBack={() => navigation.goBack()}
       testID="account-privacy-screen"
     >
+      <Text style={[styles.intro, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+        {t('account.privacyIntro')}
+      </Text>
+
       <AccountSection title={t('account.localData')}>
         <AccountRow
           icon="time-outline"
@@ -121,6 +149,7 @@ export default function PrivacyDataScreen() {
           value={t('settings.scans', { count: recentScans.length })}
           onPress={handleClearHistory}
           destructive
+          accessibilityHint={t('account.a11yClearHistory')}
           testID="account-clear-history"
         />
         <AccountRow
@@ -129,6 +158,7 @@ export default function PrivacyDataScreen() {
           value={t('favorites.count', { count: favorites.length })}
           onPress={handleClearFavorites}
           destructive
+          accessibilityHint={t('account.a11yClearFavourites')}
           testID="account-clear-favorites"
         />
         <AccountRow
@@ -137,6 +167,7 @@ export default function PrivacyDataScreen() {
           value={t('settings.products', { count: cacheSize })}
           onPress={handleClearCache}
           destructive
+          accessibilityHint={t('account.a11yClearCache')}
           testID="account-clear-cache"
           isLast
         />
@@ -155,9 +186,39 @@ export default function PrivacyDataScreen() {
             void handleHowDataUsed();
           }}
           testID="account-how-data-used"
+        />
+        <AccountRow
+          icon="mail-outline"
+          label={t('account.requestDataHelp')}
+          value={
+            supportConfigured
+              ? undefined
+              : t('account.supportNotConfiguredShort')
+          }
+          onPress={handleDataRequest}
+          accessibilityHint={t('account.a11yRequestDataHelp')}
+          testID="account-data-request"
           isLast
         />
       </AccountSection>
+
+      <Text style={[styles.footnote, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+        {t('account.privacyFootnote')}
+      </Text>
     </AccountScreenShell>
   );
 }
+
+const styles = StyleSheet.create({
+  intro: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  footnote: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+});

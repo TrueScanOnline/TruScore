@@ -27,10 +27,23 @@ export default function AccountProfileScreen() {
         <View style={[styles.avatar, { backgroundColor: darkMode ? '#243832' : '#E8F5F1' }]}>
           <Ionicons name="person" size={36} color={emerald.action} />
         </View>
-        <Text style={[styles.heading, { color: emerald.ink }]}>{t('account.guest')}</Text>
-        <Text style={[styles.body, { color: emerald.muted }]}>{t('account.profileGuestBody')}</Text>
-        <Text style={[styles.body, { color: emerald.muted, marginTop: 12 }]}>
+        <Text style={[styles.heading, { color: emerald.ink }]} maxFontSizeMultiplier={1.35}>
+          {t('account.guest')}
+        </Text>
+        <Text style={[styles.body, { color: emerald.muted }]} maxFontSizeMultiplier={1.35}>
+          {t('account.profileGuestBody')}
+        </Text>
+        <Text
+          style={[styles.body, { color: emerald.muted, marginTop: 12 }]}
+          maxFontSizeMultiplier={1.35}
+        >
           {t('account.profileLocalStorageNote')}
+        </Text>
+        <Text
+          style={[styles.body, { color: emerald.muted, marginTop: 12 }]}
+          maxFontSizeMultiplier={1.35}
+        >
+          {t('account.profileLimitsNote')}
         </Text>
       </View>
     </AccountScreenShell>

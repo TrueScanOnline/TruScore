@@ -25,8 +25,13 @@ export default function AccountHomeScreen() {
   const { t } = useTranslation();
   const { darkMode } = useTheme();
   const emerald = resultEmeraldTone(!!darkMode);
-  const { darkMode: storedDarkMode, setDarkMode } = useSettingsStore();
+  const { darkMode: storedDarkMode, setDarkMode, units, setUnits } = useSettingsStore();
   const version = getInstalledAppVersion();
+  const unitsLabel = units === 'imperial' ? t('settings.imperial') : t('settings.metric');
+
+  const toggleUnits = () => {
+    void setUnits(units === 'metric' ? 'imperial' : 'metric');
+  };
 
   return (
     <AccountScreenShell title={t('account.title')} testID="account-home-screen">
@@ -42,6 +47,7 @@ export default function AccountHomeScreen() {
           label={t('account.profile')}
           value={t('account.guest')}
           onPress={() => navigation.navigate('AccountProfile')}
+          accessibilityHint={t('account.a11yOpenProfile')}
           testID="account-row-profile"
         />
         <AccountRow
@@ -49,6 +55,7 @@ export default function AccountHomeScreen() {
           label={t('account.subscription')}
           value={t('account.planFreeShort')}
           onPress={() => navigation.navigate('AccountPlan')}
+          accessibilityHint={t('account.a11yOpenPlan')}
           testID="account-row-subscription"
           isLast
         />
@@ -59,21 +66,26 @@ export default function AccountHomeScreen() {
           icon="moon-outline"
           label={t('settings.darkMode')}
           switchValue={!!storedDarkMode}
-          onSwitchChange={setDarkMode}
+          onSwitchChange={(value) => {
+            void setDarkMode(value);
+          }}
+          accessibilityHint={t('account.a11yDarkMode')}
           testID="account-row-dark-mode"
         />
         <AccountRow
           icon="language-outline"
           label={t('settings.language')}
           value={t('account.languageEnglish')}
+          accessibilityHint={t('account.a11yLanguageEnglishOnly')}
           testID="account-row-language"
         />
         <AccountRow
-          icon="options-outline"
-          label={t('account.preferences')}
-          value={t('account.comingSoon')}
-          disabled
-          testID="account-row-preferences"
+          icon="resize-outline"
+          label={t('settings.units')}
+          value={unitsLabel}
+          onPress={toggleUnits}
+          accessibilityHint={t('account.a11yToggleUnits')}
+          testID="account-row-units"
           isLast
         />
       </AccountSection>
