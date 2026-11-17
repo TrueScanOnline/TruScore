@@ -184,7 +184,8 @@ describe('product information menu', () => {
     expect(voluntaryContributionOffer(current, open).some((row) => row.key === 'add-packet' && row.journey === 'add')).toBe(true);
     expect(productInformationMenu(current, open).find((row) => row.key === 'add-packet')).toMatchObject({
       journey: 'add',
-      formFirst: true,
+      // Assessment-lane Add keeps formFirst:false so the empty-card CTA stays aligned with Origins.
+      formFirst: false,
       label: 'Add packet information',
     });
   });

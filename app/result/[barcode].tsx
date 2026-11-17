@@ -57,7 +57,9 @@ import { PACKET_CLAIMS_CARD_TITLE } from '../../src/claims/packetClaimReceiver';
 import {
   PACKET_CLAIMS_EMPTY_STATE,
   PACKET_CLAIMS_MORE_INFORMATION,
+  packetClaimsCardShowsAddAction,
   packetClaimsCardShowsEmptyState,
+  packetClaimsCardShowsLimitedConfidenceBadge,
   packetClaimsRecognisedMarks,
   packetLineWithdrawn,
 } from '../../src/components/packetClaimsCardCopy';
@@ -2485,26 +2487,7 @@ function ResultScreenContent() {
 
         {/* TruScore Card. Info opens How this is scored (S27); score disc / Confidence open data-limitations (S26). */}
         {/* Administrative hold withholds consumer publication without changing engine outputs. */}
-        {shouldWithholdConsumerPublication(publicationHold) ? (
-          <ProductAssessmentReportControl
-            style={[styles.card, resultEmeraldCard(!!darkMode)]}
-            titleStyle={[styles.cardTitle, { color: emerald.ink }]}
-            hintStyle={[styles.insufficientDataText, { color: emerald.muted }]}
-            title={t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
-            hint={t(
-              'result.reportIncorrectAssessmentHint',
-              'If support email is configured, this opens a pre-filled report. No address is invented.'
-            )}
-            fixedConcern="administrative_hold_or_review"
-            productContext={{
-              barcode: String(barcode || ''),
-              productName: product?.product_name || product?.product_name_en,
-              brand: product?.brands,
-              disputedStatement: 'Assessment withheld / under review',
-            }}
-            testID="result-report-assessment-hold"
-          />
-        ) : truScore ? (
+        {shouldWithholdConsumerPublication(publicationHold) ? null : truScore ? (
           <>
           <EmeraldScoreFrame
             heading={productIdentity.publicScoreName}
@@ -2580,18 +2563,6 @@ function ResultScreenContent() {
               setProductInformationExpandedCategory(null);
               setContributionChoice('productInformation');
             }}
-          />
-
-          <ProductAssessmentReportControl
-            style={[styles.card, resultEmeraldCard(!!darkMode)]}
-            titleStyle={[styles.cardTitle, { color: emerald.ink }]}
-            title={t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
-            productContext={{
-              barcode: String(barcode || ''),
-              productName: product?.product_name || product?.product_name_en,
-              brand: product?.brands,
-            }}
-            testID="result-report-assessment"
           />
 
           {/* Result card heading is "What we noticed:"; share/look-through keep SCORE_HIGHLIGHTS_HEADING. */}
@@ -3105,7 +3076,10 @@ function ResultScreenContent() {
                     />
                   </View>
                 ) : null}
-                {product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited' ? (
+                {packetClaimsCardShowsLimitedConfidenceBadge({
+                  absenceEstablished: product.rveelPacketAbsenceEstablished === true,
+                  confidenceReasonCode: product._publication?.claims.confidenceReasonCode,
+                }) ? (
                   <TouchableOpacity
                     onPress={() => setClaimsLimitedConfidenceVisible(true)}
                     accessibilityRole="button"
@@ -3113,6 +3087,28 @@ function ResultScreenContent() {
                     style={[styles.originConfidence, { backgroundColor: '#ffa50022' }]}
                   >
                     <Text style={[styles.originConfidenceText, { color: '#ffa500' }]}>Limited confidence &gt;</Text>
+                  </TouchableOpacity>
+                ) : null}
+                {packetClaimsCardShowsAddAction({
+                  showEmptyState,
+                  hasAddPacketMenuRow: informationMenu.some((row) => row.key === 'add-packet'),
+                }) ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      const fresh = freshProductInformationMenu().find((row) => row.key === 'add-packet');
+                      if (!fresh) return;
+                      openContribution('packetClaims', 'add', fresh.formFirst === true);
+                    }}
+                    activeOpacity={0.7}
+                    style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={PACKET_INFORMATION_ADD}
+                    testID="result-add-packet-claims"
+                  >
+                    <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
+                    <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>
+                      {PACKET_INFORMATION_ADD}
+                    </Text>
                   </TouchableOpacity>
                 ) : null}
               </>
@@ -3130,23 +3126,6 @@ function ResultScreenContent() {
             onCorrect={() => openAgreementChange('packet_information')}
             onAgreementRecorded={handleAgreementRecorded}
           />
-          {informationMenu.some((row) => row.key === 'add-packet' && !row.formFirst) ? (
-          <TouchableOpacity
-            onPress={() => {
-              if (!freshProductInformationMenu().some((row) => row.key === 'add-packet' && !row.formFirst)) return;
-              openContribution('packetClaims', 'add');
-            }}
-            activeOpacity={0.7}
-            style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
-            accessibilityRole="button"
-            accessibilityLabel={PACKET_INFORMATION_ADD}
-          >
-            <Ionicons name="add-circle-outline" size={20} color={emerald.action} />
-            <Text style={[styles.certificationsUpdateButtonText, { color: emerald.action }]}>
-              {PACKET_INFORMATION_ADD}
-            </Text>
-          </TouchableOpacity>
-          ) : null}
           </View>
         </View>
 
@@ -3263,14 +3242,30 @@ function ResultScreenContent() {
         )}
 
 
-        {/* Scan Another Product — bottom of page */}
-        <View style={styles.scanAnotherFooter}>
+        {/* Scan Another Product — primary bottom action */}
+        <View
+          style={[
+            styles.scanAnotherFooter,
+            {
+              backgroundColor: darkMode ? emerald.card : '#FFFFFF',
+              borderColor: darkMode ? emerald.line : 'rgba(255,255,255,0.72)',
+            },
+          ]}
+        >
           <TouchableOpacity
-            style={[styles.scanAnotherButton, { backgroundColor: resultPresentation.emerald.action.light }]}
+            style={[
+              styles.scanAnotherButton,
+              {
+                backgroundColor: darkMode ? emerald.action : resultPresentation.emerald.wallpaper.deep,
+              },
+            ]}
             onPress={() => navigateToScanHome(navigation)}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel={t('result.scanAnother') || 'Scan Another Product'}
+            testID="result-scan-another"
           >
-            <Ionicons name="barcode-outline" size={20} color="#fff" />
+            <Ionicons name="barcode-outline" size={24} color="#FFFFFF" />
             <Text style={styles.scanAnotherButtonText}>
               {t('result.scanAnother') || 'Scan Another Product'}
             </Text>
@@ -3279,7 +3274,41 @@ function ResultScreenContent() {
 
         <ProductDisclaimerCard />
 
-        {/* Small clearance so the Disclaimer is not flush with the tab bar. */}
+        {/* Report Incorrect Assessment — after Disclaimer; shared Rated/NR and hold footer. */}
+        {shouldWithholdConsumerPublication(publicationHold) ? (
+          <ProductAssessmentReportControl
+            style={[styles.card, resultEmeraldCard(!!darkMode), styles.resultReportFooter]}
+            titleStyle={[styles.cardTitle, { color: emerald.ink }]}
+            hintStyle={[styles.insufficientDataText, { color: emerald.muted }]}
+            title={t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
+            hint={t(
+              'result.reportIncorrectAssessmentHint',
+              'If support email is configured, this opens a pre-filled report. No address is invented.'
+            )}
+            fixedConcern="administrative_hold_or_review"
+            productContext={{
+              barcode: String(barcode || ''),
+              productName: product?.product_name || product?.product_name_en,
+              brand: product?.brands,
+              disputedStatement: 'Assessment withheld / under review',
+            }}
+            testID="result-report-assessment-hold"
+          />
+        ) : truScore ? (
+          <ProductAssessmentReportControl
+            style={[styles.card, resultEmeraldCard(!!darkMode), styles.resultReportFooter]}
+            titleStyle={[styles.cardTitle, { color: emerald.ink }]}
+            title={t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
+            productContext={{
+              barcode: String(barcode || ''),
+              productName: product?.product_name || product?.product_name_en,
+              brand: product?.brands,
+            }}
+            testID="result-report-assessment"
+          />
+        ) : null}
+
+        {/* Small clearance so the footer is not flush with the tab bar. */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
@@ -4003,25 +4032,44 @@ const styles = StyleSheet.create({
   },
   scanAnotherFooter: {
     marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
+    marginTop: 20,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 28,
+    borderWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0A3D34',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.22,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+      default: {},
+    }),
   },
   scanAnotherButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    minHeight: 56,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    gap: 8,
+    borderRadius: 28,
+    gap: 10,
     alignSelf: 'stretch',
   },
   scanAnotherButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  resultReportFooter: {
+    marginTop: 4,
+    opacity: 0.98,
   },
   shareButtonHero: {
     flexDirection: 'row',

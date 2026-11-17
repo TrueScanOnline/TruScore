@@ -38,7 +38,10 @@ describe('W5-UI-09 founder Result refinements', () => {
   const en = JSON.parse(fs.readFileSync(EN, 'utf8'));
 
   it('opens Claims Limited confidence with the Origins pill pattern and Claims-specific copy', () => {
-    expect(result).toContain("claims.confidenceReasonCode === 'claims_primary_contribution_limited'");
+    expect(result).toContain('packetClaimsCardShowsLimitedConfidenceBadge');
+    expect(
+      fs.readFileSync(path.join(REPO, 'src/components/packetClaimsCardCopy.ts'), 'utf8')
+    ).toContain('claims_primary_contribution_limited');
     expect(result).toContain('setClaimsLimitedConfidenceVisible(true)');
     expect(result).toContain('claimsLimitedConfidenceVisible');
     expect(result).toContain('Limited confidence &gt;');

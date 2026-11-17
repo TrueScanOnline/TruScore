@@ -2,7 +2,9 @@ import {
   PACKET_CLAIMS_EMPTY_STATE,
   PACKET_CLAIMS_MORE_INFORMATION,
   displayedPacketSubjectKey,
+  packetClaimsCardShowsAddAction,
   packetClaimsCardShowsEmptyState,
+  packetClaimsCardShowsLimitedConfidenceBadge,
   packetClaimsRecognisedMarks,
   packetLineWithdrawn,
 } from '../../../components/packetClaimsCardCopy';
@@ -51,6 +53,45 @@ describe('packet claims card consumer copy', () => {
         certificationLineCount: 0,
         claimLineCount: 0,
         absenceEstablished: true,
+      })
+    ).toBe(false);
+  });
+
+  it('shows the empty-card Add CTA only when empty and a menu Add row exists', () => {
+    expect(
+      packetClaimsCardShowsAddAction({ showEmptyState: true, hasAddPacketMenuRow: true })
+    ).toBe(true);
+    expect(
+      packetClaimsCardShowsAddAction({ showEmptyState: true, hasAddPacketMenuRow: false })
+    ).toBe(false);
+    expect(
+      packetClaimsCardShowsAddAction({ showEmptyState: false, hasAddPacketMenuRow: true })
+    ).toBe(false);
+  });
+
+  it('hides Limited confidence chrome only for an admitted packet absence', () => {
+    expect(
+      packetClaimsCardShowsLimitedConfidenceBadge({
+        absenceEstablished: true,
+        confidenceReasonCode: 'claims_primary_contribution_limited',
+      })
+    ).toBe(false);
+    expect(
+      packetClaimsCardShowsLimitedConfidenceBadge({
+        absenceEstablished: false,
+        confidenceReasonCode: 'claims_primary_contribution_limited',
+      })
+    ).toBe(true);
+    expect(
+      packetClaimsCardShowsLimitedConfidenceBadge({
+        absenceEstablished: true,
+        confidenceReasonCode: undefined,
+      })
+    ).toBe(false);
+    expect(
+      packetClaimsCardShowsLimitedConfidenceBadge({
+        absenceEstablished: false,
+        confidenceReasonCode: 'other',
       })
     ).toBe(false);
   });

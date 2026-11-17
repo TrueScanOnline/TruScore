@@ -78,3 +78,28 @@ export function packetClaimsCardShowsEmptyState(input: {
   if (input.absenceEstablished) return false;
   return input.recognisedMarkCount === 0 && input.certificationLineCount === 0 && input.claimLineCount === 0;
 }
+
+/**
+ * Empty Packet Claims card CTA — same invitation shape as empty Product Origins.
+ * Menu eligibility still decides whether an Add row exists; this only gates card presentation.
+ */
+export function packetClaimsCardShowsAddAction(input: {
+  showEmptyState: boolean;
+  hasAddPacketMenuRow: boolean;
+}): boolean {
+  return input.showEmptyState === true && input.hasAddPacketMenuRow === true;
+}
+
+/**
+ * Card-only Limited confidence chrome.
+ * An admitted packet-absence observation may still carry claims_primary_contribution_limited
+ * in publication — hide only this badge for that verified absence presentation.
+ * Does not change Claims confidence, reason codes, or scores.
+ */
+export function packetClaimsCardShowsLimitedConfidenceBadge(input: {
+  absenceEstablished: boolean;
+  confidenceReasonCode: string | undefined | null;
+}): boolean {
+  if (input.absenceEstablished === true) return false;
+  return input.confidenceReasonCode === 'claims_primary_contribution_limited';
+}

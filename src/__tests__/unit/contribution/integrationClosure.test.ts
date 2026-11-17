@@ -10,7 +10,11 @@ import {
   projectAdmittedIngredientsDisplay,
   retainedAfterPartialAdmission,
 } from '../../../contribution/governedDisplayProjection';
-import { admittedPacketContributionRepresented, resultContributionActions } from '../../../contribution/resultContributionActions';
+import {
+  admittedPacketContributionRepresented,
+  PACKET_INFORMATION_ADD,
+  resultContributionActions,
+} from '../../../contribution/resultContributionActions';
 import { bodyDataLimitationActions } from '../../../contribution/governedDisplayProjection';
 import {
   buildManualTextDocument,
@@ -256,7 +260,10 @@ describe('functional-to-consumer integration closure', () => {
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     expect(result).toContain('PACKET_INFORMATION_ADD');
     expect(result).toContain('Change packet information');
-    expect(result).toContain('Add packet information');
+    expect(PACKET_INFORMATION_ADD).toBe('Add packet claims');
+    expect(
+      fs.readFileSync(path.join(REPO, 'src/contribution/resultContributionActions.ts'), 'utf8')
+    ).toContain("PACKET_INFORMATION_ADD = 'Add packet claims'");
     expect(result).not.toContain('Correct packet claims or certifications');
     expect(result).not.toContain('Add certifications');
     expect(result).not.toContain('Lane A');
@@ -331,7 +338,8 @@ describe('functional-to-consumer integration closure', () => {
     expect(menuSource).toContain('!admittedPacketContributionRepresented(product as Product)');
     expect(result).toContain('Certifications');
     expect(result).toContain('Other packet claims');
-    expect(result).toContain("row.key === 'add-packet' && !row.formFirst");
+    expect(result).toContain('packetClaimsCardShowsAddAction');
+    expect(result).toContain("row.key === 'add-packet'");
     expect(modal).not.toContain('As on pack');
   });
 

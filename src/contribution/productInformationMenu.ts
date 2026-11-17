@@ -182,6 +182,17 @@ export function productInformationMenu(
   }
 
   for (const voluntary of voluntaryContributionOffer(product, options)) {
+    const existing = byKey.get(voluntary.key);
+    // Keep assessment-lane Add packet (formFirst:false) for the empty Packet Claims card CTA.
+    // Origins may still prefer voluntary formFirst when an OFF country prefill applies.
+    if (
+      existing &&
+      existing.formFirst === false &&
+      voluntary.journey === 'add' &&
+      voluntary.key === 'add-packet'
+    ) {
+      continue;
+    }
     const category = categoryFor(voluntary.destination);
     byKey.set(voluntary.key, {
       key: voluntary.key,

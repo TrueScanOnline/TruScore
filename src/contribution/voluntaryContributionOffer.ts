@@ -108,11 +108,13 @@ export function voluntaryContributionOffer(
     });
   }
 
+  // Admitted pack absence is a prevailing packet observation: Change (and WP09 thumbs-down) must stay eligible.
   const packetPencil =
     actions.packetInformationAction === 'update' ||
     (product?.rveelGovernedPacketClaims || []).length > 0 ||
     (product?.rveelGovernedCertifications || []).length > 0 ||
-    (product?.certifications || []).length > 0;
+    (product?.certifications || []).length > 0 ||
+    product?.rveelPacketAbsenceEstablished === true;
   if (packetPencil) {
     rows.push({
       key: 'add-packet',

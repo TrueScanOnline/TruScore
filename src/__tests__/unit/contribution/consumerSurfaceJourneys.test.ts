@@ -196,12 +196,12 @@ describe('consumer surface journeys', () => {
     expect(result).toContain("openContribution('nutrition', 'add')");
     expect(result).toContain("openContribution('ingredients', 'add')");
     expect(result).toContain("openContribution('origins', 'add')");
-    expect(result).toContain("openContribution('packetClaims', 'add')");
+    expect(result).toContain("openContribution('packetClaims', 'add'");
     expect(result).toContain('Add nutrition');
     expect(result).toContain('Add ingredients');
     expect(result).toContain('Add product origins');
     expect(result).toContain('PACKET_INFORMATION_ADD');
-    expect(PACKET_INFORMATION_ADD).toBe('Add packet information');
+    expect(PACKET_INFORMATION_ADD).toBe('Add packet claims');
     expect(modal).toContain('packetRowVisible');
     expect(modal).toContain('originRowsForJourney');
     expect(modal).toContain("header: 'Packet information'");

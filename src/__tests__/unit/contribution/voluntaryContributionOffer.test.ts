@@ -148,6 +148,17 @@ describe('voluntary contribution offer', () => {
     }
   });
 
+  it('keeps Change packet after an admitted pack-absence observation', () => {
+    const withAbsence = {
+      ...product({ packet: 'assessed' }),
+      rveelPacketAbsenceEstablished: true,
+    } as Product;
+    const absenceOffer = voluntaryContributionOffer(withAbsence, open);
+    expect(
+      absenceOffer.filter((row) => row.destination === 'packetClaims').map((row) => row.journey)
+    ).toEqual(['add', 'change']);
+  });
+
   it('starts Add origins blank and opens the current proposition on Change', () => {
     const chile = {
       claimType: 'produced_in' as const,

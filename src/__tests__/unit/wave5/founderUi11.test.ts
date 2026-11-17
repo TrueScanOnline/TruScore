@@ -55,9 +55,10 @@ describe('W5-UI-11 Community Agreement presentation', () => {
 
   it('10–11. Limited confidence gates stay original; no new nutrition/ingredients LC badge', () => {
     expect(result).toContain("product._publication?.transparency.confidence === 'limited'");
-    expect(result).toContain(
-      "product._publication?.claims.confidenceReasonCode === 'claims_primary_contribution_limited'"
-    );
+    expect(result).toContain('packetClaimsCardShowsLimitedConfidenceBadge');
+    expect(
+      fs.readFileSync(path.join(__dirname, '../../../components/packetClaimsCardCopy.ts'), 'utf8')
+    ).toContain('claims_primary_contribution_limited');
     expect(result).toContain('PRODUCT_ORIGINS_LIMITED_CONFIDENCE');
     expect(result).toContain('CLAIMS_LIMITED_CONFIDENCE_BODY');
     expect(PRODUCT_ORIGINS_LIMITED_CONFIDENCE.toLowerCase()).toContain('community');
