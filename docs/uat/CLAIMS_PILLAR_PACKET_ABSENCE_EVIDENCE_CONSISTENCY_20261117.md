@@ -14,7 +14,7 @@
 |------|-----|--------|
 | Starting tip (verified) | `bcd95ddc856bbd210d93021377b7006eb9904585` | FM-03/FM-03R reconciliation docs tip |
 | Implementation (this pack) | `82ad94684df215c14080f88e863643dc244454d2` | Presentation helper + look-through + admitted-without-snapshot client handling |
-| Final pushed | *(filled after push)* | Docs tip after SHA stamp + push |
+| Final pushed | `aa5176f6bbb0eb5ef18def6d638cb8d342f19628` | Docs tip on `origin/build/w5-founders-native-20261114` |
 
 Frozen native UAT tag / `preserve/pre-wave5-9910276-20261008` **unchanged**. Account tab remains **CLOSED**.
 
