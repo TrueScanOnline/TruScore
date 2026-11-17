@@ -474,8 +474,51 @@
           "src/__tests__/unit/account/unitsSettingsPersistence.test.ts"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
+      },
+      {
+        "date": "2026-11-17",
+        "sourceHeadReviewed": "6c6340c89f33b6607095c9c5937dfe06c44db042",
+        "reviewer": "Independent engineering register update (founder-authorised Account tab closure)",
+        "status": "ACCOUNT_TAB_MVP_CODE_COMPLETE_CLOSED_NONBINDING",
+        "title": "Account Free/Guest MVP — CODE COMPLETE AND ACCEPTED",
+        "workstreamStatus": "MVP CODE-COMPLETE — CLOSED FOR ACTIVE DEVELOPMENT",
+        "meaning": "Founder decision that Account tab MVP development is closed. Nonbinding engineering milestone for Free/Guest Account Home, Profile, Plan, display settings, Privacy & Data, Help & Support, Legal & Methodology, draft Privacy/Terms factual reconciliation, and preservation of protected scoring/Evidence Authority/publication governance. Not a legal opinion, not public-release clearance, not iOS acceptance, and not integrated MVP product completion. Cross-platform UAT and legal/operational dependencies remain open under the integrated MVP release programme. Next development workstream must be another unfinished MVP product area, not Account.",
+        "verifiedInRepository": [
+          "At sourceHeadReviewed 6c6340c89f33b6607095c9c5937dfe06c44db042 on build/w5-founders-native-20261114, publicReleaseStatus remains BLOCKED; all fifteen requirements[].status remain PENDING; finalApproval founder/counsel remain PENDING; Privacy/Terms destinations remain unpublished (ready false).",
+          "From prior Free/Guest milestone e5d1b340 to Trust closeout implementation 2442ab3 then docs tip 6c6340c: Account Privacy/Help/Legal trust surfaces, expandable disclosures, privacy-request and support mailto helpers, product-report concern picker, getCacheSize null-on-failure behaviour, draft Privacy/Terms factual reconciliation, OFF Share Card attribution proposal (docs only), dispute-procedure updates, and Account Trust evidence/tests. Changed paths are Account UI/content/utils/tests/docs and limited Result report-control wiring — not protected scoring engines, Evidence Authority admission, or Signals governance.",
+          "Closeout implementation SHA 2442ab320008d72e1e7ee18626db75c71c755f90 is an ancestor of sourceHeadReviewed; tip commits after 2442ab3 are documentation-only SHA/evidence alignment.",
+          "Frozen native UAT tag / preserve marker unchanged by this register update; legalDestinations readiness not flipped."
+        ],
+        "cursorReportedNotIndependentlyReexecuted": [
+          "Automated suites reported PASS on closeout tip (TypeScript, Account Trust/concern contracts, getCacheSize.failure, methodology, Wave 5 gates, release-lock 6/6, public preflight DENIED/BLOCKED as expected).",
+          "Cursor-reported Android Expo Go (Pixel_5 / emulator-5554) Trust visual journey after Metro recovery via adb reverse + exp://127.0.0.1:8081: Account Trust rows, Privacy & Data panels/requests, Help FAQ/contact, fail-closed unconfigured support mailto, Legal pillars/states/Confidence, Privacy Policy and Terms blocked alerts, in-app methodology sheet. Screenshots under untracked artifacts/account-trust-closeout-20261117/ (26–48); not available on GitHub for independent image inspection.",
+          "Cursor-updated docs/uat/ACCOUNT_TRUST_LEGAL_COMPLETION_EVIDENCE_20261117.md recording Android PASS and iOS OUTSTANDING — narrative evidence only until independently reviewed."
+        ],
+        "openConditions": [
+          "Fresh Android verification of the final Account Trust bundle remains an integrated-release condition: Cursor reported local captures, but independent inspection/replay and signed-build confirmation are still required under full_device_backend_share_regression.",
+          "iOS visual and accessibility verification outstanding (TestFlight / device).",
+          "A genuine configured, monitored support/privacy contact with accountable operators is not established; mailto open is not case receipt.",
+          "Native Share Card OFF photo provenance, attribution and licensing clearance remain unresolved; Account disclosure and the 2026-11-17 attribution proposal do not implement or clear the Share Card gap.",
+          "Minor legacy app/settings.tsx cache-clearing error-handling to be assessed during integrated MVP QA if that route remains accessible.",
+          "Approved and published Terms/Privacy, incorporation, jurisdiction, external counsel and all other existing gate requirements remain PENDING; publicReleaseStatus remains BLOCKED."
+        ],
+        "relevantEvidence": [
+          "docs/uat/ACCOUNT_TRUST_LEGAL_COMPLETION_EVIDENCE_20261117.md",
+          "docs/uat/ACCOUNT_TAB_MVP_COMPLETION_EVIDENCE_20261116.md",
+          "docs/legal/ACCOUNT_TRUST_DRAFT_RECONCILIATION_20261117.md",
+          "docs/legal/ACCOUNT_TRUST_OFF_SHARE_CARD_ATTRIBUTION_PROPOSAL_20261117.md",
+          "docs/legal/ACCOUNT_TRUST_COUNSEL_REVIEW_REGISTER_20261117.md",
+          "src/screens/account/PrivacyDataScreen.tsx",
+          "src/screens/account/HelpSupportScreen.tsx",
+          "src/screens/account/LegalMethodologyScreen.tsx",
+          "src/components/account/ProductReportConcernPicker.tsx",
+          "src/services/cacheService.ts",
+          "src/__tests__/unit/services/getCacheSize.failure.test.ts",
+          "src/__tests__/unit/account/accountTrustLegalCompletion.test.ts"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone. Account active development is closed; remaining items belong to integrated MVP release / other product workstreams."
       }
     ]
   },
-  "lastEngineeringReviewSourceHead": "e5d1b340c8763c65569cad4e9101741e9bd2aabd"
+  "lastEngineeringReviewSourceHead": "6c6340c89f33b6607095c9c5937dfe06c44db042"
 }

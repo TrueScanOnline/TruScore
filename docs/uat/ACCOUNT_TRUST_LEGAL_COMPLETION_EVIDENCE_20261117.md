@@ -57,7 +57,7 @@
 | 1 Factual | Disclosures, clears, FAQ/routes, mailto separation |
 | 2 Rights | Deletion=review; telemetry honesty; attribution gap disclosed; drafts reconciled factually |
 | 3 Adversarial | Unconfigured support; food-safety; no auto correction; cache unknown ≠ zero |
-| 4 QA | Automated suites PASS on closeout tip. Fresh Android post-reload Trust UI capture **OUTSTANDING** this closeout (Expo Go hung on reload / “Something went wrong” after Metro offline restart; earlier Trust screenshots must **not** be reused as proof of closeout code). **iOS OUTSTANDING**. |
+| 4 QA | Automated suites PASS on closeout tip. Fresh Android Expo Go Trust UI capture **PASS** on tip `6c6340c` / impl `2442ab3` (17 Nov session: Metro recovered via `adb reverse` + `exp://127.0.0.1:8081`; force-stop relaunch cleared stuck Bundling 100%). Artifacts under `artifacts/account-trust-closeout-20261117/` (`26`–`48`). **iOS OUTSTANDING**. |
 
 ## Automated test results (closeout)
 
@@ -74,14 +74,27 @@
 
 ## Device evidence
 
-Untracked folder: `artifacts/account-trust-closeout-20261117/` (reload attempts / Expo error states only).  
-**Do not treat prior `account-trust-privacy-legal-20261117` or Account MVP acceptance PNGs as proof of this closeout tip.**
+Untracked folder: `artifacts/account-trust-closeout-20261117/`.  
+**SHA at capture:** `6c6340c89f33b6607095c9c5937dfe06c44db042` (docs tip; closeout impl `2442ab3`).  
+**Platform:** Android Expo Go / Pixel_5 (`emulator-5554`) via `exp://127.0.0.1:8081` + `adb reverse tcp:8081 tcp:8081`.
+
+| Capture | File | Observation |
+|---|---|---|
+| Account Trust rows | `26_account_scrolled.png`, `48_account_trust_rows.png` | Privacy & Data / Help & Support / Legal & Methodology; `RVEEL 10.0.0` |
+| Privacy top / mid / requests | `27`–`30` | Data-at-a-glance; clears with counts; expandable use panels; privacy request categories; “Not configured” / “Not published yet” |
+| Help FAQ / contact | `32`–`35`, `37` | FAQ expandables; product / manufacturer / technical report rows |
+| Help fail-closed mailto | `36_help_concern_or_state.png` | “A support email is not configured… no placeholder address will be used.” |
+| Legal education | `38`–`42` | Pillars/states/Confidence; methodology sources; corrections → Help |
+| Legal destinations blocked | `43`, `45` | Privacy Policy / Terms “Not published yet”; draft ≠ published copy in alert |
+| Methodology in-app dest | `46_legal_methodology_dest.png` | In-app Score methodology sheet opens (approved copy) |
+
+**Do not treat prior `account-trust-privacy-legal-20261117` or Account MVP acceptance PNGs alone as proof of this closeout tip** — this folder’s `26`–`48` series is the post-recovery proof.
 
 ## Remaining residual
 
 | Class | Item |
 |---|---|
-| Technical | Fresh Android visual of Privacy/Help/Legal after successful Expo reload; iOS visual |
+| Technical | iOS TestFlight visual of Privacy/Help/Legal |
 | Technical / rights | Native Share Card OFF attribution implementation after counsel wording approval |
 | Operational | Configured monitored support email; staffed dispute owner |
 | Legal external | Entity, counsel approvals, published PP/ToS — all PENDING |
@@ -94,7 +107,9 @@ No scoring weights, Rateability, Confidence derivation, EA admission, Dynamic Si
 
 | Verdict | Status |
 |---|---|
-| **Technical Account Trust closeout (code)** | COMPLETE for authorised gaps above, with **device visual re-proof outstanding** |
+| **Technical Account Trust closeout (code)** | COMPLETE for authorised gaps above |
+| **Android device visual re-proof** | **PASS** (Expo Go; see Device evidence) |
+| **iOS device visual** | **OUTSTANDING** |
 | **Public legal release** | **BLOCKED** — unchanged (`publicReleaseStatus: BLOCKED`, 15 requirements PENDING, legal destinations unpublished) |
 
 ## Separate public-release statement
