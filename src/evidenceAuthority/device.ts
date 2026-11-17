@@ -477,8 +477,12 @@ export async function submitClaimsAbsenceAttestation(input: {
     if (outcome?.status === 'rejected') {
       return { status: 'rejected', snapshot, reason: 'submission_rejected' };
     }
+    // Server may say admitted without a snapshot — do not report client success or invent one.
+    if (outcome?.status === 'admitted' && !snapshot) {
+      return { status: 'pending', snapshot: null, reason: 'admitted_without_snapshot' };
+    }
     return {
-      status: outcome?.status === 'admitted' ? 'admitted' : 'pending',
+      status: 'pending',
       snapshot,
       reason: outcome?.status,
     };

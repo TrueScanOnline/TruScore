@@ -3,9 +3,12 @@
  *
  * Founder position (Consolidated Controlling Specification 20260905 v0.5 §S12a; Body v0.6 §5,
  * Planet v0.2 §5, Open v0.2 §6): the pillar look-through shows governed Highlight stories and,
- * separately, governed contextual contribution prompts. There is no third category of copy, so a
- * consumer-facing sentence such as "Nothing stood out for <pillar> on this product." is
- * manufactured commentary and must not render.
+ * separately, governed contextual contribution prompts. A consumer-facing sentence such as
+ * "Nothing stood out for <pillar> on this product." is manufactured commentary and must not render.
+ *
+ * Founder-authorised S12a exception (20261117): Claims may show a distinct read-only packet
+ * evidence status when the host supplies a prevailing admitted-absence consumer line. That
+ * status is not fabricated empty-state commentary, is Claims-only, and is not a Highlight.
  *
  * Score-neutral: this asserts presentation only. S12 eligibility, promotion and the fired ledger
  * are untouched.
@@ -37,6 +40,13 @@ const BASE_ONLY_LEDGER: FiredAdjustment[] = [
 describe('look-through empty state renders nothing manufactured', () => {
   it('no consumer surface carries the legacy empty-state sentence', () => {
     expect(LIST_SOURCE).not.toContain('Nothing stood out');
+    expect(MODAL_SOURCE).not.toContain('Nothing stood out');
+  });
+
+  it('records the Claims packet-evidence exception without inventing empty Highlights', () => {
+    expect(MODAL_SOURCE).toContain('Founder exception 20261117');
+    expect(MODAL_SOURCE).toContain("current.pillar === 'Ethics' && packetEvidenceConsumerLine");
+    expect(MODAL_SOURCE).toContain('testID="claims-pillar-packet-evidence-status"');
     expect(MODAL_SOURCE).not.toContain('Nothing stood out');
   });
 

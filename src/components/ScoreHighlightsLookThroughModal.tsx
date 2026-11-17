@@ -100,6 +100,14 @@ interface ScoreHighlightsLookThroughModalProps {
   claimsAbsenceAttestationState?: ClaimsAbsenceAttestationUiState;
   claimsAbsenceAttestationError?: string | null;
   /**
+   * Founder-authorised S12a exception (20261117): Claims-only read-only packet evidence status.
+   * Host passes the shared consumer line only for a prevailing admitted absence (never inferred).
+   * Distinct from Highlights, contextual prompts, and contribution solicitation.
+   */
+  packetEvidenceConsumerLine?: string | null;
+  /** Attribution for the packet evidence status; omitted when the line is null. */
+  packetEvidenceAttribution?: string | null;
+  /**
    * Host handler for governed in-app L3 destinations. External sources are opened here.
    * When omitted, in-app L3 affordances are not offered.
    */
@@ -133,6 +141,8 @@ export default function ScoreHighlightsLookThroughModal({
   onOpenContribution,
   claimsAbsenceAttestationState = 'idle',
   claimsAbsenceAttestationError = null,
+  packetEvidenceConsumerLine = null,
+  packetEvidenceAttribution = null,
   onOpenInAppL3,
 }: ScoreHighlightsLookThroughModalProps) {
   const { darkMode } = useTheme();
@@ -260,7 +270,25 @@ export default function ScoreHighlightsLookThroughModal({
                   Where contextual prompts exist they alone carry the pillar state; where neither an
                   eligible Highlight nor a contextual prompt qualifies, the body stays empty. No
                   parallel empty-state sentence is rendered in either case.
+                  Founder exception 20261117: Claims may show a distinct read-only packet evidence
+                  status when the host supplies a prevailing admitted-absence consumer line.
                 */}
+                {current.pillar === 'Ethics' && packetEvidenceConsumerLine ? (
+                  <View
+                    style={styles.packetEvidenceStatus}
+                    accessibilityRole="text"
+                    testID="claims-pillar-packet-evidence-status"
+                  >
+                    <Text style={[styles.packetEvidenceLine, { color: emerald.ink }]}>
+                      {packetEvidenceConsumerLine}
+                    </Text>
+                    {packetEvidenceAttribution ? (
+                      <Text style={[styles.packetEvidenceAttribution, { color: emerald.muted }]}>
+                        {packetEvidenceAttribution}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
                 <ScoreHighlightsList
                   stories={pillarStories}
                   onSelectStory={handleSelectStory}
@@ -509,5 +537,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  packetEvidenceStatus: {
+    marginBottom: 16,
+    gap: 6,
+  },
+  packetEvidenceLine: {
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 22,
+  },
+  packetEvidenceAttribution: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

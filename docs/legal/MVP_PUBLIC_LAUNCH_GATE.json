@@ -517,6 +517,27 @@
           "src/__tests__/unit/account/accountTrustLegalCompletion.test.ts"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone. Account active development is closed; remaining items belong to integrated MVP release / other product workstreams."
+      },
+      {
+        "date": "2026-11-17",
+        "reviewer": "Cursor engineering (founder-authorised Claims presentation consistency)",
+        "status": "CLAIMS_PILLAR_PACKET_ABSENCE_PRESENTATION_NONBINDING",
+        "title": "Claims pillar / Packet Claims absence statement consistency — nonbinding evidence note",
+        "meaning": "Nonbinding engineering/legal-risk note only. Aligns Packet Claims card and Claims pillar read-only copy for a prevailing admitted packet-absence Boolean; fixes client admitted-without-snapshot acknowledgement. Does not clear public release, approve any requirement, change Evidence Authority admission, or change Claims arithmetic.",
+        "openConditions": [
+          "Product-level rveelPacketAbsenceEstablished may misrepresent absence across differing packet variants if multi-variant subjects coexist; variant-scoped presentation or fail-closed disagreement remains an open AMBER governed decision.",
+          "FM-03R Claims NR gate remains UI solicitation policy only; server admission does not currently require Claims NR — separate AMBER/RED decision if founders want server-side NR enforcement.",
+          "Live UAT admission for founder GTIN 9414732208565 was not independently re-verified from private evidence rows in this milestone; do not treat presentation wiring as proof of a new live admit.",
+          "iOS device acceptance of the Claims pillar packet-evidence status remains outstanding."
+        ],
+        "relevantEvidence": [
+          "docs/uat/CLAIMS_PILLAR_PACKET_ABSENCE_EVIDENCE_CONSISTENCY_20261117.md",
+          "src/contribution/packetEvidenceStatus.ts",
+          "src/components/ScoreHighlightsLookThroughModal.tsx",
+          "src/evidenceAuthority/device.ts",
+          "app/result/[barcode].tsx"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
       }
     ]
   },

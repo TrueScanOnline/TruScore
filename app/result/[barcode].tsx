@@ -176,11 +176,14 @@ import {
 import {
   CONTRIBUTION_NOTICE_ADDED,
   CONTRIBUTION_NOTICE_SAVED,
-  PACKET_ABSENCE_PRODUCT_STATE,
   PACKET_INFORMATION_ADD,
   resultContributionActions,
   type ContributionEntryContext,
 } from '../../src/contribution/resultContributionActions';
+import {
+  PACKET_ABSENCE_ATTRIBUTION,
+  packetEvidenceStatusConsumerLine,
+} from '../../src/contribution/packetEvidenceStatus';
 import {
   nutritionPrefillFromSource,
   originDraftsFromGovernedFacts,
@@ -2147,6 +2150,9 @@ function ResultScreenContent() {
   const isWebSearchProduct = isWebSearchFallback(product);
 
   const contributionActions = resultContributionActions(product);
+  const packetAbsenceConsumerLine = shouldWithholdConsumerPublication(publicationHold)
+    ? null
+    : packetEvidenceStatusConsumerLine(product);
   const voluntaryOffer = voluntaryContributionOffer(product, { publicationSettled });
   const informationMenu = productInformationMenu(product, { publicationSettled });
   const freshProductInformationMenu = () => {
@@ -2257,7 +2263,8 @@ function ResultScreenContent() {
         setClaimsAbsenceAttestationState('idle');
         return;
       }
-      if (result.status === 'admitted') {
+      // Success only with admitted + authoritative snapshot (device never invents one).
+      if (result.status === 'admitted' && result.snapshot) {
         setClaimsAbsenceAttestationState('idle');
         setClaimsAbsenceAttestationError(null);
         setScoreHighlightsRequest(null);
@@ -2266,7 +2273,9 @@ function ResultScreenContent() {
       }
       setClaimsAbsenceAttestationState('failed');
       setClaimsAbsenceAttestationError(
-        'Your confirmation could not be completed yet. Claims stays Not Rateable until RVEEL can admit it.'
+        result.reason === 'admitted_without_snapshot'
+          ? 'Confirmation was received but could not be reconciled yet. Claims stays Not Rateable until RVEEL refreshes the authoritative record.'
+          : 'Your confirmation could not be completed yet. Claims stays Not Rateable until RVEEL can admit it.'
       );
     } catch {
       setClaimsAbsenceAttestationState('failed');
@@ -3135,8 +3144,10 @@ function ResultScreenContent() {
               </>
             );
           })()}
-          {product.rveelPacketAbsenceEstablished ? (
-            <Text style={{ color: colors.text }}>{PACKET_ABSENCE_PRODUCT_STATE}</Text>
+          {packetAbsenceConsumerLine ? (
+            <Text style={{ color: colors.text }} testID="packet-claims-absence-status">
+              {packetAbsenceConsumerLine}
+            </Text>
           ) : null}
           <CommunityAgreementBar
             group="packet_information"
@@ -3376,6 +3387,10 @@ function ResultScreenContent() {
         onOpenContribution={openPillarContribution}
         claimsAbsenceAttestationState={claimsAbsenceAttestationState}
         claimsAbsenceAttestationError={claimsAbsenceAttestationError}
+        packetEvidenceConsumerLine={packetAbsenceConsumerLine}
+        packetEvidenceAttribution={
+          packetAbsenceConsumerLine ? PACKET_ABSENCE_ATTRIBUTION : null
+        }
         onOpenInAppL3={openInAppScoreHighlightL3}
       />
 
