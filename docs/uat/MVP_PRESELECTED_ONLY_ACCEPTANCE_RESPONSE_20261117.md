@@ -42,7 +42,7 @@ Implementation: `956886b7eb60f87de75c82082f0e43ee8a4efbb9`
 |------|-----|
 | Independent review tip | `47ba9cc3685b59398855ac042b049d2b37e54797` |
 | Policy implementation | `956886b7eb60f87de75c82082f0e43ee8a4efbb9` |
-| This remediation tip | *(filled after commit/push)* |
+| This remediation tip | `9f2ae6354219134d5bfb86c9795afc7db816ab89` |
 | UAT deployment | `dpl_DGYNnsQuQ9161yCEUK3LoCFYD2hM` (distinct from Git tip) |
 | UAT alias | `https://truscoreapi-uat.vercel.app` → remapped to above deployment on 2026-11-17 (previously still pointed at older `truscoreapi-pndkk8gci-…`) |
 
