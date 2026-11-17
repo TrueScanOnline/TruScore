@@ -1,10 +1,10 @@
-# Packet Claims — FM-03 / FM-03R entry reconciliation
+﻿# Packet Claims — FM-03 / FM-03R entry reconciliation
 
 **Date:** 17 November 2026  
 **Branch:** `build/w5-founders-native-20261114`  
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`  
 **Starting remote HEAD:** `598910ee90c2af274d1544780c2fb37462d4350c`  
-**Implementation SHA:** *(stamped at push)*  
+**Implementation SHA:** c346551ab8b5da513262c9c542831bbc621e7630  
 **Doctrine:** **AMBER** (founder-authorised) — additional Result UI entry to existing FM-03R attestation without broadening eligibility. Footer hold/NR report fixes are **GREEN**.
 
 ## Root cause of the missing button
@@ -101,3 +101,4 @@ Should photo-free FM-03R ever apply when Claims is **Rated** but the consumer Pa
 ## Protected invariants
 
 No scoring, Rateability, Confidence derivation, EA admission semantics broadening, Signals, Account reopen, or legal-gate flips. `publicReleaseStatus: BLOCKED`; 15 requirements PENDING.
+
