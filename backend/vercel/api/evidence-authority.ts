@@ -34,6 +34,10 @@ import {
   readPrivateBlob,
 } from '../lib/evidenceImageBlob';
 import { evidenceImageProfile } from '../truescan-src/evidenceImage/profile';
+import {
+  rejectEvidenceAuthorityActionIfPolicyActive,
+  submitPayloadUsesProhibitedMvpSource,
+} from '../lib/mvpContributionInputPolicy';
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -151,6 +155,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
     const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>;
     const action = typeof body.action === 'string' ? body.action : '';
+    const adminHeader = req.headers['x-rveel-founder-admin'];
+    const founderAdminToken = process.env.RVEEL_FOUNDER_ADMIN_TOKEN;
+    // MVP preselected-only: block photo / manual-text finalisation and prohibited submits early.
+    if (action !== 'contribution-trace' && action !== 'issue-credential' && action !== 'withdraw' && action !== 'suppress') {
+      const policyGate = rejectEvidenceAuthorityActionIfPolicyActive({
+        action,
+        adminHeader,
+        founderAdminToken,
+        submitUsesProhibitedSource:
+          action === 'submit'
+            ? submitPayloadUsesProhibitedMvpSource({
+                sourceBase64: body.sourceBase64,
+                facts: body.facts,
+              })
+            : false,
+      });
+      if (!policyGate.ok) {
+        return res.status(policyGate.status).json({
+          success: false,
+          error: policyGate.error,
+          policyVersion: policyGate.policyVersion,
+        });
+      }
+    }
     if (action === 'contribution-trace') {
       serverTraceAction('contribution_trace');
       logClientTimeline(body);

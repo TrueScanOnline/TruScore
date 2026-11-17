@@ -1,25 +1,41 @@
 /**
- * Rveel MVP feature gates — production-default OFF.
+ * Rveel MVP feature gates — production-default OFF for optional surfaces.
  *
- * Guided contribution submit and Community Agreements stay in source for later
- * releases, but must not promise unavailable workflows or write to backend
- * surfaces that are not operational for the shipping build.
+ * Founder 2026-11-17: consumer product-evidence is preselected-only. Free-form
+ * guided contribution (photos / free text) stays OFF while that policy is active,
+ * even if an older UAT entitlement set EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION=1.
  *
- * Enable only with an explicit EXPO_PUBLIC_* = '1' entitlement.
- * Missing / unset / any other value → OFF (fail closed).
+ * FM-03R photo-free Claims absence attestation is separately permitted.
  */
 
 import { expectedAuthorityEnv } from '../evidenceAuthority/assessment';
 import { isStoreReleaseRuntime } from './scoreDiagnostics';
+import {
+  isConsumerFreeFormGuidedContributionAllowed,
+  isMvpConsumerInputClassPermitted,
+  isMvpPreselectedOnlyConsumerPolicyActive,
+} from './mvpContributionInputPolicy';
 
 /**
- * Guided packet / origins / nutrition contribution submission.
- * Requires explicit opt-in AND a configured Evidence Authority environment.
- * Store/public runtimes stay OFF unless founders deliberately set the flag on
- * that profile (default eas store profiles leave it unset).
+ * Free-form guided packet / origins / nutrition / claims contribution submission
+ * (photos, free text, typed nutrition). Requires explicit opt-in AND authority env,
+ * and is blocked while the preselected-only MVP policy is active.
  */
 export function isGuidedContributionSubmitEnabled(): boolean {
+  if (!isConsumerFreeFormGuidedContributionAllowed()) return false;
   if (process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION !== '1') return false;
+  if (!expectedAuthorityEnv()) return false;
+  return true;
+}
+
+/**
+ * FM-03R: photo-free Claims packet-absence user attestation.
+ * Permitted under preselected-only when the Evidence Authority environment is set.
+ * Does not broaden eligibility beyond Claims NR gates in highlightContributionLinks.
+ */
+export function isClaimsAbsenceAttestationContributionEnabled(): boolean {
+  if (!isMvpConsumerInputClassPermitted('packet_absence_user_attestation')) return false;
+  if (process.env.EXPO_PUBLIC_MVP_CLAIMS_ABSENCE_ATTESTATION === '0') return false;
   if (!expectedAuthorityEnv()) return false;
   return true;
 }
@@ -27,8 +43,15 @@ export function isGuidedContributionSubmitEnabled(): boolean {
 /**
  * Community Agreements (WP09). Default OFF for MVP — no migration applied.
  * When OFF: no fetch/submit and no fabricated counts in UI.
+ * Agree responses remain the only WP09 write when enabled; Correct targets free-form Change.
  */
 export function isCommunityAgreementsEnabled(): boolean {
+  if (
+    isMvpPreselectedOnlyConsumerPolicyActive() &&
+    !isMvpConsumerInputClassPermitted('community_agreement_agree')
+  ) {
+    return false;
+  }
   return process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS === '1';
 }
 

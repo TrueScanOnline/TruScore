@@ -14,6 +14,7 @@ import {
   getPhotos,
 } from '../lib/database';
 import { barcodeLookupKeys, canonicalBarcodeForStorage } from '../lib/barcodeLookupKeys';
+import { rejectConsumerManualProductWriteIfPolicyActive } from '../lib/mvpContributionInputPolicy';
 
 /** Non-scoring keys still accepted on manual-products. Origin/certs are governed evidence, not Product fields. */
 const PROPRIETARY_KEYS = [
@@ -76,7 +77,7 @@ function sanitizeProductForApi(
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Rveel-Founder-Admin');
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -89,6 +90,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'POST') {
+      // MVP preselected-only: reject unrestricted consumer manual product writes.
+      const policy = rejectConsumerManualProductWriteIfPolicyActive({
+        adminHeader: req.headers['x-rveel-founder-admin'],
+        founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
+      });
+      if (!policy.ok) {
+        return res.status(policy.status).json({
+          success: false,
+          error: policy.error,
+          policyVersion: policy.policyVersion,
+        });
+      }
+
       // Submit manual product data (handles both new submissions and updates)
       const { barcode, productData } = req.body;
 

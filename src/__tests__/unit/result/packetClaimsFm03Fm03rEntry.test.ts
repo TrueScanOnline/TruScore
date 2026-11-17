@@ -66,9 +66,12 @@ function product(pub: CrossPillarPublicationSnapshot, extra: Partial<Product> = 
 describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
   const prevGuided = process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION;
   const prevEnv = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+  const prevPreselected = process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
 
   beforeAll(() => {
-    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    // Preselected-only MVP: free-form/photo guided OFF; FM-03R attestation ON via authority env.
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
   });
 
@@ -77,6 +80,8 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     else process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = prevGuided;
     if (prevEnv === undefined) delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
     else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = prevEnv;
+    if (prevPreselected === undefined) delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+    else process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = prevPreselected;
   });
 
   it('keeps the approved FM-03R label and exposes card Add choice + attestation wire-up', () => {
@@ -85,9 +90,9 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     expect(result).toContain("setContributionChoice('packetClaimsAdd')");
     expect(result).toContain('result-packet-fm03r-absence');
     expect(result).toContain('CLAIMS_PACKET_ABSENCE_PILLAR_LABEL');
-    expect(result).toContain("openContribution('packetClaims', 'add', false, 'packet_absence')");
     expect(result).toContain('submitClaimsAbsenceAttestationFromPillar');
     expect(result).toContain("publicationHold?.status === 'held'");
+    expect(result).toContain('FM-03 photographed absence retired');
   });
 
   it('allows FM-03R only for Claims NR with live opportunity and no contradiction', () => {
@@ -96,7 +101,8 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     const actions = resultContributionActions(current);
     expect(claimsPacketAbsencePillarIneligibilityReason(current, pub, actions)).toBeNull();
     expect(claimsPacketAbsencePillarEligible(current, pub, actions)).toBe(true);
-    expect(packetClaimsPhotoAbsenceDiscoverable(current)).toBe(true);
+    // Photo FM-03 retired from MVP consumer entry under preselected-only.
+    expect(packetClaimsPhotoAbsenceDiscoverable(current)).toBe(false);
   });
 
   it('rejects FM-03R for Claims Rated without broadening gates', () => {

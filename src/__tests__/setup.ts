@@ -34,7 +34,11 @@ global.fetch = jest.fn();
 // Unit suites that exercise contribution menus assume an entitled UAT path.
 // Production/store builds remain default-OFF via app.config.js / eas.json.
 if (process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION === undefined) {
-  process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+  // Preselected-only MVP: free-form guided defaults OFF in tests; suites that need it opt in.
+  process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
+}
+if (process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY === undefined) {
+  process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
 }
 if (process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV === undefined) {
   process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';

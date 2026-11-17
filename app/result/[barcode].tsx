@@ -198,7 +198,14 @@ import {
 } from '../../src/contribution/productInformationMenu';
 import { RESULT_SCORE_HIGHLIGHTS_HEADING } from '../../src/lib/scoreHighlights';
 import { voluntaryContributionOffer } from '../../src/contribution/voluntaryContributionOffer';
-import { isGuidedContributionSubmitEnabled } from '../../src/config/mvpFeatureGates';
+import {
+  isClaimsAbsenceAttestationContributionEnabled,
+  isGuidedContributionSubmitEnabled,
+} from '../../src/config/mvpFeatureGates';
+import {
+  isConsumerManualProductContributionAllowed,
+  isConsumerPhotoEvidenceContributionAllowed,
+} from '../../src/config/mvpContributionInputPolicy';
 import {
   subscribeEvidenceAdmission,
   submitClaimsAbsenceAttestation,
@@ -1753,8 +1760,10 @@ function ResultScreenContent() {
     formFirst = false,
     entryIntent: 'default' | 'packet_absence' = 'default'
   ) => {
-    // MVP: do not open guided submit when the feature gate is off.
+    // MVP preselected-only: free-form guided (photos / typed evidence) stays closed.
+    // FM-03R uses submitClaimsAbsenceAttestation — never this modal.
     if (!isGuidedContributionSubmitEnabled()) return;
+    if (entryIntent === 'packet_absence') return;
     setContributionEntry(entry);
     setContributionJourney(journey);
     setContributionFormFirst(formFirst);
@@ -2075,38 +2084,46 @@ function ResultScreenContent() {
             
             {!isRetrievalError && (
             <>
-            {/* Primary Action: Add Product Information */}
-            <TouchableOpacity
-              style={[styles.primaryActionButton, { backgroundColor: colors.primary }]}
-              onPress={() => setManualProductModalVisible(true)}
-            >
-              <Ionicons name="add-circle" size={24} color="#fff" />
-              <Text style={styles.primaryActionButtonText}>
-                {t('manualProduct.addProductInformation') || 'Add Product Information'}
-              </Text>
-              <Text style={styles.primaryActionButtonSubtext}>
-                {t('manualProduct.addProductSubtext') || 'Enter details from the product label'}
-              </Text>
-            </TouchableOpacity>
-            
-            {/* Secondary Action: View Open Food Facts website */}
-            <TouchableOpacity
-              style={[styles.secondaryActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              onPress={handleContribute}
-            >
-              <Ionicons name="globe-outline" size={20} color={colors.primary} />
-              <Text style={[styles.secondaryActionButtonText, { color: colors.primary }]}>
-                View Open Food Facts website
-              </Text>
-            </TouchableOpacity>
-            
-            {/* Help Text */}
-            <View style={[styles.helpSection, { backgroundColor: colors.surface }]}>
-              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-              <Text style={[styles.helpText, { color: colors.textSecondary }]}>
-                {t('result.unknownProductHelp') || 'You can add product information manually, or contribute it to the Open Food Facts database to help others.'}
-              </Text>
-            </View>
+            {isConsumerManualProductContributionAllowed() ? (
+              <>
+                <TouchableOpacity
+                  style={[styles.primaryActionButton, { backgroundColor: colors.primary }]}
+                  onPress={() => setManualProductModalVisible(true)}
+                >
+                  <Ionicons name="add-circle" size={24} color="#fff" />
+                  <Text style={styles.primaryActionButtonText}>
+                    {t('manualProduct.addProductInformation') || 'Add Product Information'}
+                  </Text>
+                  <Text style={styles.primaryActionButtonSubtext}>
+                    {t('manualProduct.addProductSubtext') || 'Enter details from the product label'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.secondaryActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={handleContribute}
+                >
+                  <Ionicons name="globe-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.secondaryActionButtonText, { color: colors.primary }]}>
+                    View Open Food Facts website
+                  </Text>
+                </TouchableOpacity>
+                <View style={[styles.helpSection, { backgroundColor: colors.surface }]}>
+                  <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                  <Text style={[styles.helpText, { color: colors.textSecondary }]}>
+                    {t('result.unknownProductHelp') ||
+                      'You can add product information manually, or contribute it to the Open Food Facts database to help others.'}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <View style={[styles.helpSection, { backgroundColor: colors.surface }]}>
+                <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+                <Text style={[styles.helpText, { color: colors.textSecondary }]}>
+                  Manual product entry and photo uploads are unavailable in this MVP. You can scan another
+                  barcode or search for a product that is already in the catalogue.
+                </Text>
+              </View>
+            )}
             
             <TouchableOpacity 
               style={styles.backButton} 
@@ -2133,7 +2150,7 @@ function ResultScreenContent() {
         </ScrollView>
         
         {/* Manual Product Entry Modal */}
-        {!isRetrievalError && (
+        {!isRetrievalError && isConsumerManualProductContributionAllowed() && (
         <ManualProductEntryModal
           visible={manualProductModalVisible}
           onClose={() => setManualProductModalVisible(false)}
@@ -2462,7 +2479,11 @@ function ResultScreenContent() {
           productName={product.product_name || product.product_name_en || t('result.productUnknown')}
           brandText={product.brands ? sanitizeText(product.brands, 200) : null}
           isUserContributed={isUserContributed}
-          onTakePhoto={() => setCameraModalVisible(true)}
+          onTakePhoto={() => {
+            if (!isConsumerPhotoEvidenceContributionAllowed()) return;
+            setCameraModalVisible(true);
+          }}
+          allowTakePhoto={isConsumerPhotoEvidenceContributionAllowed()}
           takePhotoLabel={t('result.takePhoto')}
           userContributedLabel={t('manualProduct.userContributed')}
           heroImageA11y={t('result.heroImageA11y')}
@@ -3119,12 +3140,18 @@ function ResultScreenContent() {
                 {packetClaimsCardShowsAddAction({
                   showEmptyState,
                   hasAddPacketMenuRow: informationMenu.some((row) => row.key === 'add-packet'),
-                }) ? (
+                }) ||
+                (showEmptyState &&
+                  isClaimsAbsenceAttestationContributionEnabled() &&
+                  product._publication &&
+                  claimsPacketAbsencePillarEligible(
+                    product,
+                    product._publication,
+                    resultContributionActions(product)
+                  )) ? (
                   <TouchableOpacity
                     onPress={() => {
-                      const fresh = freshProductInformationMenu().find((row) => row.key === 'add-packet');
-                      if (!fresh) return;
-                      // Choice sheet: add claim/cert vs FM-03R photo-free vs discoverable FM-03 photo path.
+                      // Preselected-only: sheet may only offer FM-03R; free-form Add stays gated off.
                       setClaimsAbsenceAttestationState('idle');
                       setClaimsAbsenceAttestationError(null);
                       setContributionChoice('packetClaimsAdd');
@@ -3642,32 +3669,34 @@ function ResultScreenContent() {
                 <Text style={{ color: emerald.muted, fontSize: 15, marginBottom: 12 }}>
                   Choose how you want to help with packet claims or certifications.
                 </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    const fresh = freshProductInformationMenu().find((row) => row.key === 'add-packet');
-                    if (!fresh) return;
-                    openContribution('packetClaims', 'add', fresh.formFirst === true, 'default');
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Add a claim or certification"
-                  testID="result-packet-add-claim-or-cert"
-                  style={{
-                    minHeight: 56,
-                    borderRadius: 14,
-                    borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: emerald.line,
-                    paddingHorizontal: 14,
-                    justifyContent: 'center',
-                    marginBottom: 10,
-                  }}
-                >
-                  <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
-                    Add a claim or certification
-                  </Text>
-                  <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
-                    Camera, gallery, or type what you see on the pack.
-                  </Text>
-                </TouchableOpacity>
+                {isGuidedContributionSubmitEnabled() ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      const fresh = freshProductInformationMenu().find((row) => row.key === 'add-packet');
+                      if (!fresh) return;
+                      openContribution('packetClaims', 'add', fresh.formFirst === true, 'default');
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add a claim or certification"
+                    testID="result-packet-add-claim-or-cert"
+                    style={{
+                      minHeight: 56,
+                      borderRadius: 14,
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: emerald.line,
+                      paddingHorizontal: 14,
+                      justifyContent: 'center',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
+                      Add a claim or certification
+                    </Text>
+                    <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
+                      Camera, gallery, or type what you see on the pack.
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
                 {product._publication &&
                 claimsPacketAbsencePillarEligible(
                   product,
@@ -3712,33 +3741,8 @@ function ResultScreenContent() {
                     ) : null}
                   </TouchableOpacity>
                 ) : null}
-                {packetClaimsPhotoAbsenceDiscoverable(product) ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      openContribution('packetClaims', 'add', false, 'packet_absence');
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Confirm absence with a pack photo"
-                    testID="result-packet-fm03-photo-absence"
-                    style={{
-                      minHeight: 56,
-                      borderRadius: 14,
-                      borderWidth: StyleSheet.hairlineWidth,
-                      borderColor: emerald.line,
-                      paddingHorizontal: 14,
-                      justifyContent: 'center',
-                      marginBottom: 10,
-                    }}
-                  >
-                    <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
-                      Confirm absence with a pack photo
-                    </Text>
-                    <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
-                      Photo-supported route. Attach a supporting pack image before the confirmation becomes
-                      available. Opening alone does not admit an absence.
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
+                {/* FM-03 photographed absence retired from MVP consumer entry (preselected-only).
+                    Post-MVP reactivation would call packetClaimsPhotoAbsenceDiscoverable + openContribution(..., 'packet_absence'). */}
               </>
             ) : null}
             {contributionChoice === 'origins' ? (
@@ -3870,13 +3874,15 @@ function ResultScreenContent() {
         }}
       />
 
-      {/* Camera Capture Modal */}
-      <CameraCaptureModal
-        visible={cameraModalVisible}
-        onClose={() => setCameraModalVisible(false)}
-        onCapture={handleCaptureImage}
-        barcode={barcode}
-      />
+      {/* Camera Capture Modal — hero contribution only; blocked under MVP preselected-only. */}
+      {isConsumerPhotoEvidenceContributionAllowed() ? (
+        <CameraCaptureModal
+          visible={cameraModalVisible}
+          onClose={() => setCameraModalVisible(false)}
+          onCapture={handleCaptureImage}
+          barcode={barcode}
+        />
+      ) : null}
 
       <Modal
         visible={packetClaimsExplainerVisible}
@@ -4000,19 +4006,21 @@ function ResultScreenContent() {
         </View>
       </Modal>
 
-      {/* Manual Product Entry Modal */}
-      <ManualProductEntryModal
-        visible={manualProductModalVisible}
-        onClose={() => {
-          setManualProductModalVisible(false);
-          setEditProductData(null);
-          setEditMode(false);
-        }}
-        onSave={handleManualProductSave}
-        barcode={barcode}
-        initialProduct={editProductData}
-        editMode={editMode}
-      />
+      {/* Manual Product Entry Modal — unreachable under MVP preselected-only. */}
+      {isConsumerManualProductContributionAllowed() ? (
+        <ManualProductEntryModal
+          visible={manualProductModalVisible}
+          onClose={() => {
+            setManualProductModalVisible(false);
+            setEditProductData(null);
+            setEditMode(false);
+          }}
+          onSave={handleManualProductSave}
+          barcode={barcode}
+          initialProduct={editProductData}
+          editMode={editMode}
+        />
+      ) : null}
 
       {/* Share Modal */}
       {product && (

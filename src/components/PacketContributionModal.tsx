@@ -37,6 +37,7 @@ import { acknowledgedUnitRevisions, listSubmissionResumeAttention, retryParkedEv
 import { acceptLocalCapture, evidenceImageStatus, readableEvidenceFileUri, resumeEvidenceImages, retryParkedEvidenceImage } from '../evidenceImage/pipeline';
 import { visibleEvidenceImages } from '../evidenceImage/projection';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
+import { isGuidedContributionSubmitEnabled } from '../config/mvpFeatureGates';
 import {
   NUTRITION_FIELDS,
   type NutritionAttribute,
@@ -289,6 +290,12 @@ export default function PacketContributionModal({
 }) {
   const { darkMode } = useTheme();
   const insets = useSafeAreaInsets();
+  // MVP preselected-only: free-form guided modal must not remain reachable.
+  useEffect(() => {
+    if (visible && !isGuidedContributionSubmitEnabled()) {
+      onClose();
+    }
+  }, [visible, onClose]);
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [surfaceJourneyId, setSurfaceJourneyId] = useState<string | null>(null);

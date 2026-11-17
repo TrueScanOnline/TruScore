@@ -5,12 +5,27 @@
  */
 
 import { displayNameForCertification } from './resolveCertification';
+import { MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION } from '../config/mvpContributionInputPolicy';
 import asset from './governed/packet_certification_manual_discovery_v1_0_1.json';
 import selectionRegister from './governed/packet_certification_selection_v1_0_3.json';
 
 export const DISCOVERY_ASSET_ID = 'rveel.packet_certification_manual_discovery';
 export const DISCOVERY_BASE_VERSION = '1.0.1';
 export const DISCOVERY_ASSET_VERSION = '1.0.3';
+
+/**
+ * MVP overlay — does not mutate immutable discovery JSON.
+ * Free-text packet wording is unavailable under preselected-only.
+ */
+export function mvpDiscoveryInputRestriction() {
+  return MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION;
+}
+
+export function discoveryFreeTextConsumerSubmissionAvailable(): boolean {
+  // MVP overlay hard-disables free-text; immutable asset may still declare true historically.
+  void MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION;
+  return false;
+}
 
 export type DiscoveryTreatment =
   | 'selectable_existing'

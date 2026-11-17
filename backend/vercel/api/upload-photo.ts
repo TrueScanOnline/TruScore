@@ -16,11 +16,12 @@ import { Readable } from 'stream';
 import { v2 as cloudinary } from 'cloudinary';
 import { savePhoto } from '../lib/database';
 import { canonicalBarcodeForStorage } from '../lib/barcodeLookupKeys';
+import { rejectConsumerPhotoUploadIfPolicyActive } from '../lib/mvpContributionInputPolicy';
 
 function handleCORS(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Rveel-Founder-Admin');
 }
 
 /**
@@ -116,6 +117,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // MVP preselected-only: reject public consumer photo uploads before any storage.
+    const policy = rejectConsumerPhotoUploadIfPolicyActive({
+      adminHeader: req.headers['x-rveel-founder-admin'],
+      founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
+    });
+    if (!policy.ok) {
+      return res.status(policy.status).json({
+        success: false,
+        error: policy.error,
+        policyVersion: policy.policyVersion,
+      });
+    }
+
     const { barcode, imageType, imageBase64, mimeType, userId } = req.body;
 
     if (!barcode || !imageBase64) {

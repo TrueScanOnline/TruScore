@@ -159,6 +159,11 @@ export interface ProductHeroSectionProps {
   brandText?: string | null;
   isUserContributed: boolean;
   onTakePhoto: () => void;
+  /**
+   * MVP preselected-only: when false, hide camera/gallery contribution controls.
+   * Viewing an already-available source photograph remains allowed.
+   */
+  allowTakePhoto?: boolean;
   /** i18n */
   takePhotoLabel: string;
   userContributedLabel: string;
@@ -259,6 +264,7 @@ export default function ProductHeroSection({
   brandText,
   isUserContributed,
   onTakePhoto,
+  allowTakePhoto = true,
   takePhotoLabel,
   userContributedLabel,
   heroImageA11y,
@@ -328,15 +334,24 @@ export default function ProductHeroSection({
       ]}
     >
       {!hasUrl ? (
-        <TouchableOpacity
-          style={[styles.photoFill, { width: innerW, height: innerH }]}
-          onPress={onTakePhoto}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={takePhotoLabel}
-        >
-          <Ionicons name={resultPresentation.icons.capture} size={28} color={face.action} />
-        </TouchableOpacity>
+        allowTakePhoto ? (
+          <TouchableOpacity
+            style={[styles.photoFill, { width: innerW, height: innerH }]}
+            onPress={onTakePhoto}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={takePhotoLabel}
+          >
+            <Ionicons name={resultPresentation.icons.capture} size={28} color={face.action} />
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={[styles.photoFill, { width: innerW, height: innerH }]}
+            accessibilityLabel={heroImageA11y}
+          >
+            <Ionicons name={resultPresentation.icons.imageError} size={26} color={tone.muted} />
+          </View>
+        )
       ) : loadState === 'error' ? (
         <View style={[styles.photoFill, { width: innerW, height: innerH }]} accessibilityLabel={loadErrorLabel}>
           <Ionicons name={resultPresentation.icons.imageError} size={26} color={tone.muted} />
@@ -500,7 +515,7 @@ export default function ProductHeroSection({
                 {productName}
               </Text>
               {actions ? <View style={styles.actions}>{actions}</View> : null}
-              {!hasUrl ? (
+              {!hasUrl && allowTakePhoto ? (
                 <TouchableOpacity
                   onPress={onTakePhoto}
                   accessibilityRole="button"
@@ -533,14 +548,16 @@ export default function ProductHeroSection({
                     >
                       <Text style={[styles.retryBtnText, { color: face.action }]}>{retryLabel}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={onTakePhoto}
-                      style={[styles.retryBtn, { borderColor: tone.line }]}
-                      accessibilityRole="button"
-                      accessibilityLabel={takePhotoLabel}
-                    >
-                      <Text style={[styles.retryBtnText, { color: face.name }]}>{takePhotoLabel}</Text>
-                    </TouchableOpacity>
+                    {allowTakePhoto ? (
+                      <TouchableOpacity
+                        onPress={onTakePhoto}
+                        style={[styles.retryBtn, { borderColor: tone.line }]}
+                        accessibilityRole="button"
+                        accessibilityLabel={takePhotoLabel}
+                      >
+                        <Text style={[styles.retryBtnText, { color: face.name }]}>{takePhotoLabel}</Text>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 </View>
               ) : null}

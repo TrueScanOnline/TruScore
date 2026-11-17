@@ -19,7 +19,10 @@ import {
   type ContributionEntryContext,
   type ResultContributionActions,
 } from '../../contribution/resultContributionActions';
-import { isGuidedContributionSubmitEnabled } from '../../config/mvpFeatureGates';
+import {
+  isClaimsAbsenceAttestationContributionEnabled,
+  isGuidedContributionSubmitEnabled,
+} from '../../config/mvpFeatureGates';
 import type { ContributionOpportunity, CrossPillarPublicationSnapshot } from '../rateability/types';
 import type { Product } from '../../types/product';
 import type { ScoreHighlightPillar } from './types';
@@ -124,7 +127,9 @@ export function claimsPacketAbsencePillarIneligibilityReason(
   publication: CrossPillarPublicationSnapshot | null | undefined,
   actions: ResultContributionActions
 ): string | null {
-  if (!isGuidedContributionSubmitEnabled()) return 'guided_contribution_disabled';
+  if (!isClaimsAbsenceAttestationContributionEnabled()) {
+    return 'claims_absence_attestation_disabled';
+  }
   if (!publication || publication.settled !== true) return 'publication_not_settled';
   if (publication.overall?.publicationStatus === 'checking') return 'overall_checking';
   if (publication.claims?.publicationStatus !== 'nr') {
@@ -150,8 +155,13 @@ export function claimsPacketAbsencePillarEligible(
   return claimsPacketAbsencePillarIneligibilityReason(product, publication, actions) == null;
 }
 
-/** Empty Packet Claims card may offer photo-supported FM-03 when no positive packet evidence is shown. */
+/**
+ * Photo-supported FM-03 absence — retired from MVP consumer entry under preselected-only.
+ * Always false while photos are prohibited; retained for post-MVP reactivation only.
+ */
 export function packetClaimsPhotoAbsenceDiscoverable(product: Product): boolean {
+  if (!isGuidedContributionSubmitEnabled()) return false;
+  // Free-form guided also implies photos; still fail closed under preselected-only via that gate.
   if (product.rveelPacketAbsenceEstablished === true) return false;
   return !claimsPacketAbsenceContradicted(product);
 }
@@ -162,8 +172,10 @@ export function highlightContributionOffer(
   options?: HighlightContributionOptions
 ): HighlightContributionOffer {
   void options?.highlight;
-  // MVP: do not offer submit destinations when guided contribution is off.
-  if (!isGuidedContributionSubmitEnabled()) return EMPTY;
+  const freeFormGuided = isGuidedContributionSubmitEnabled();
+  const absenceAttestation = isClaimsAbsenceAttestationContributionEnabled();
+  // MVP preselected-only: free-form guided may be off while FM-03R attestation remains.
+  if (!freeFormGuided && !absenceAttestation) return EMPTY;
   if (options?.publicationSettled !== true) return EMPTY;
   const publication = product?._publication;
   if (!publication || publication.settled !== true) return EMPTY;
@@ -181,6 +193,24 @@ export function highlightContributionOffer(
 
   // Planet has no authorised live contribution destination for missing assessment.
   if (pillar === 'Planet') return EMPTY;
+
+  // Free-form destinations (nutrition / ingredients / origins / add packet) stay off under MVP policy.
+  if (!freeFormGuided) {
+    if (pillar !== 'Ethics') return EMPTY;
+    if (claimsPacketAbsencePillarEligible(product as Product, publication, actions)) {
+      return offer([
+        {
+          key: 'packet-absence',
+          label: CLAIMS_PACKET_ABSENCE_PILLAR_LABEL,
+          destination: 'packetClaims',
+          journey: 'add',
+          kind: 'absence',
+          entryIntent: 'claims_absence_attestation',
+        },
+      ]);
+    }
+    return EMPTY;
+  }
 
   if (pillar === 'Body') {
     const body = publication.body;

@@ -3,6 +3,7 @@
  */
 import {
   assertMvpFeatureGatesReleaseSafe,
+  isClaimsAbsenceAttestationContributionEnabled,
   isCommunityAgreementsEnabled,
   isGuidedContributionSubmitEnabled,
 } from '../../../config/mvpFeatureGates';
@@ -12,6 +13,7 @@ describe('mvpFeatureGates', () => {
   const prevAgreements = process.env.EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS;
   const prevAuthority = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
   const prevStore = process.env.EXPO_PUBLIC_STORE_RELEASE;
+  const prevPreselected = process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
 
   afterEach(() => {
     if (prevContribution === undefined) delete process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION;
@@ -22,6 +24,8 @@ describe('mvpFeatureGates', () => {
     else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = prevAuthority;
     if (prevStore === undefined) delete process.env.EXPO_PUBLIC_STORE_RELEASE;
     else process.env.EXPO_PUBLIC_STORE_RELEASE = prevStore;
+    if (prevPreselected === undefined) delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+    else process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = prevPreselected;
   });
 
   it('defaults guided contribution and community agreements OFF', () => {
@@ -32,12 +36,27 @@ describe('mvpFeatureGates', () => {
     expect(isCommunityAgreementsEnabled()).toBe(false);
   });
 
-  it('requires both contribution flag and authority env', () => {
+  it('blocks free-form guided while preselected-only policy is active even if entitled', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    expect(isGuidedContributionSubmitEnabled()).toBe(false);
+  });
+
+  it('requires both contribution flag and authority env when policy is deactivated', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
     process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
     delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
     expect(isGuidedContributionSubmitEnabled()).toBe(false);
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
     expect(isGuidedContributionSubmitEnabled()).toBe(true);
+  });
+
+  it('permits FM-03R attestation under preselected-only when authority env is set', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    expect(isClaimsAbsenceAttestationContributionEnabled()).toBe(true);
   });
 
   it('fails closed for community agreements unless explicitly entitled', () => {

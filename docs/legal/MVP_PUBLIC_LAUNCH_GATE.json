@@ -538,6 +538,30 @@
           "app/result/[barcode].tsx"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
+      },
+      {
+        "date": "2026-11-17",
+        "reviewer": "Cursor engineering (founder MVP preselected-only contribution policy)",
+        "status": "MVP_PRESELECTED_ONLY_CONTRIBUTION_CONTAINMENT_NONBINDING",
+        "title": "Founder MVP contribution policy — preselected-only (no photos / free text / VLM)",
+        "meaning": "Nonbinding engineering note. Implements default-deny consumer contribution input policy: FM-03R attestation and WP09 agree remain the only permitted consumer product-evidence writes when otherwise eligible; photos, free text, manual product, and VLM/OCR are blocked in UI and server reject helpers. Does not clear public release, approve requirements, change scoring, or claim live UAT API containment until redeployed.",
+        "verificationStatus": "SOURCE_IMPLEMENTED_UAT_SERVER_REDEPLOY_PENDING",
+        "openConditions": [
+          "Vercel UAT backend must be redeployed from the implementation tip and independently exercised before claiming API photo/manual/free-text rejection is operational in the live UAT host.",
+          "Governed catalogue-only Origins/Claims/certification consumer paths remain deferred; no invented taxonomies.",
+          "FM-03R eligibility remains Claims NR UI policy; server NR enforcement and Rated expansion remain separate AMBER/RED decisions.",
+          "Android full negative UI matrix after Metro reload and iOS device acceptance remain outstanding.",
+          "Variant-scoped packet-absence presentation risk remains AMBER as previously recorded."
+        ],
+        "relevantEvidence": [
+          "docs/uat/MVP_PRESELECTED_ONLY_CONTRIBUTION_CONTAINMENT_20261117.md",
+          "src/config/mvpContributionInputPolicy.ts",
+          "backend/vercel/lib/mvpContributionInputPolicy.ts",
+          "backend/vercel/api/upload-photo.ts",
+          "backend/vercel/api/manual-products.ts",
+          "backend/vercel/api/evidence-authority.ts"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
       }
     ]
   },

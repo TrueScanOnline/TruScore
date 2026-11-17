@@ -13,6 +13,7 @@ import {
   getManufacturingCountrySubmissions,
 } from '../lib/database';
 import { getCommunityVerificationThresholds } from '../truescan-src/config/contributionPolicy';
+import { rejectConsumerManualProductWriteIfPolicyActive } from '../lib/mvpContributionInputPolicy';
 
 interface ManufacturingCountrySubmission {
   barcode: string;
@@ -46,6 +47,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'POST') {
+      const policy = rejectConsumerManualProductWriteIfPolicyActive({
+        adminHeader: req.headers['x-rveel-founder-admin'],
+        founderAdminToken: process.env.RVEEL_FOUNDER_ADMIN_TOKEN,
+      });
+      if (!policy.ok) {
+        return res.status(policy.status).json({
+          success: false,
+          error: 'mvp_preselected_only_manufacturing_country_write_forbidden',
+          policyVersion: policy.policyVersion,
+        });
+      }
       // Submit manufacturing country data
       const { barcode, country, userId, hasImportedIngredients, photoUrl } = req.body;
 

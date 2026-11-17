@@ -32,3 +32,4 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | FM-03R Claims absence UI typecheck fix | `532c1c82960cc16f18c06355713b4a371f511e86` | on `build/w5-founders-native-20261114` |
 | FM-01/02/03/03R founder evidence record `docs/uat/FOUNDER_MODIFICATIONS_20261115.md` | see HEAD after evidence commit on `build/w5-founders-native-20261114` | on `build/w5-founders-native-20261114` |
 | Claims pillar / Packet Claims admitted-absence presentation consistency | `82ad94684df215c14080f88e863643dc244454d2` | on `build/w5-founders-native-20261114` |
+| MVP preselected-only contribution containment (no photos/free text/VLM) | *(fill after commit)* | on `build/w5-founders-native-20261114` |

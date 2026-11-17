@@ -1,3 +1,4 @@
+import { isConsumerVlmOcrContributionAllowed } from '../config/mvpContributionInputPolicy';
 import { getSession, upsertSession } from './sessionStore';
 import type {
   ExtractionProducerKind,
@@ -59,7 +60,11 @@ export async function runExtraction(params: {
 }): Promise<{ session: PacketContributionSession; run: ExtractionRun }> {
   const session = await getSession(params.sessionId);
   if (!session) throw new Error('packet_session_missing');
-  const producer = params.producer || abstainingExtractionProducer;
+  // MVP preselected-only: never activate a non-abstaining VLM/OCR producer for consumer flows.
+  let producer = params.producer || abstainingExtractionProducer;
+  if (!isConsumerVlmOcrContributionAllowed() && producer.kind !== 'abstaining') {
+    producer = abstainingExtractionProducer;
+  }
   const startedAt = params.now ?? Date.now();
   let status: ExtractionStatus = 'failed';
   let statusDetail = 'Extraction failed before a result was produced.';
