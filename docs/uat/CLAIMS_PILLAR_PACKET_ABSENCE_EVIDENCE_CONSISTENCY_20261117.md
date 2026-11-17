@@ -13,8 +13,8 @@
 | Role | SHA | Notes |
 |------|-----|--------|
 | Starting tip (verified) | `bcd95ddc856bbd210d93021377b7006eb9904585` | FM-03/FM-03R reconciliation docs tip |
-| Implementation (this pack) | *(filled after commit)* | Presentation helper + look-through + admitted-without-snapshot client handling |
-| Final pushed | *(filled after push)* | Same tip when push succeeds |
+| Implementation (this pack) | `82ad94684df215c14080f88e863643dc244454d2` | Presentation helper + look-through + admitted-without-snapshot client handling |
+| Final pushed | *(filled after push)* | Docs tip after SHA stamp + push |
 
 Frozen native UAT tag / `preserve/pre-wave5-9910276-20261008` **unchanged**. Account tab remains **CLOSED**.
 
