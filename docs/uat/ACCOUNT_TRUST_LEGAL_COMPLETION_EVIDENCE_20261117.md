@@ -5,8 +5,8 @@
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`  
 **Verified starting SHA (Trust programme):** `1043a9e554a3bc8da6b467bc479c8b9a385d094c`  
 **Prior Trust tip before closeout:** `bfd7d0dc1077ad7c629435a79e9d0ab14bec2885`  
-**Closeout implementation SHA:** `2442ab320008d72e1e7ee18626db75c71c755f90`  
-**Final pushed tip SHA:** `a25623b4ed444fbe5eca4a0dbc36186d15087b76`
+**Closeout implementation SHA / Final pushed SHA:** `2442ab320008d72e1e7ee18626db75c71c755f90`  
+**Docs tip after evidence SHA records:** see branch HEAD on `build/w5-founders-native-20261114` (docs-only commits may sit above the implementation SHA).
 
 ## Doctrine classification
 
