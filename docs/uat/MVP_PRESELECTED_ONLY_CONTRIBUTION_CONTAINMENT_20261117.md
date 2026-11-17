@@ -3,8 +3,8 @@
 **Branch:** `build/w5-founders-native-20261114`  
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`  
 **Verified starting remote HEAD:** `567a8ab1915db96ecec4a7ff3bfff3a249163da8`  
-**Implementation SHA:** *(filled after commit)*  
-**Final pushed tip:** *(filled after push)*
+**Implementation SHA:** `956886b7eb60f87de75c82082f0e43ee8a4efbb9`  
+**Final pushed tip:** *(filled after docs tip push)*
 
 ---
 
