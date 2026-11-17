@@ -144,7 +144,7 @@ import {
   shouldWithholdConsumerPublication,
   type PublicationHoldClientState,
 } from '../../src/services/publicationHold';
-import { openAssessmentReport } from '../../src/utils/openAssessmentReport';
+import ProductAssessmentReportControl from '../../src/components/ProductAssessmentReportControl';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 import { uploadProductPhoto } from '../../src/services/photoUploadService';
@@ -2486,36 +2486,24 @@ function ResultScreenContent() {
         {/* TruScore Card. Info opens How this is scored (S27); score disc / Confidence open data-limitations (S26). */}
         {/* Administrative hold withholds consumer publication without changing engine outputs. */}
         {shouldWithholdConsumerPublication(publicationHold) ? (
-          <TouchableOpacity
+          <ProductAssessmentReportControl
             style={[styles.card, resultEmeraldCard(!!darkMode)]}
-            onPress={() =>
-              void openAssessmentReport({
-                subject: t('account.supportSubjectReport', 'RVEEL problem report'),
-                fields: {
-                  barcode: String(barcode || ''),
-                  productName: product?.product_name || product?.product_name_en,
-                  brand: product?.brands,
-                  errorType: 'administrative_hold_or_review',
-                  disputedStatement: 'Assessment withheld / under review',
-                },
-                missingMessage: t('account.supportEmailMissing'),
-                failedMessage: t('account.supportEmailFailed', {
-                  email: productIdentity.supportEmail || '',
-                }),
-              })
-            }
+            titleStyle={[styles.cardTitle, { color: emerald.ink }]}
+            hintStyle={[styles.insufficientDataText, { color: emerald.muted }]}
+            title={t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
+            hint={t(
+              'result.reportIncorrectAssessmentHint',
+              'If support email is configured, this opens a pre-filled report. No address is invented.'
+            )}
+            fixedConcern="administrative_hold_or_review"
+            productContext={{
+              barcode: String(barcode || ''),
+              productName: product?.product_name || product?.product_name_en,
+              brand: product?.brands,
+              disputedStatement: 'Assessment withheld / under review',
+            }}
             testID="result-report-assessment-hold"
-          >
-            <Text style={[styles.cardTitle, { color: emerald.ink }]}>
-              {t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
-            </Text>
-            <Text style={[styles.insufficientDataText, { color: emerald.muted }]}>
-              {t(
-                'result.reportIncorrectAssessmentHint',
-                'If support email is configured, this opens a pre-filled report. No address is invented.'
-              )}
-            </Text>
-          </TouchableOpacity>
+          />
         ) : truScore ? (
           <>
           <EmeraldScoreFrame
@@ -2594,30 +2582,17 @@ function ResultScreenContent() {
             }}
           />
 
-          <TouchableOpacity
+          <ProductAssessmentReportControl
             style={[styles.card, resultEmeraldCard(!!darkMode)]}
-            onPress={() =>
-              void openAssessmentReport({
-                subject: t('account.supportSubjectReport', 'RVEEL problem report'),
-                fields: {
-                  barcode: String(barcode || ''),
-                  productName: product?.product_name || product?.product_name_en,
-                  brand: product?.brands,
-                  errorType: 'assessment',
-                  disputedStatement: 'Incorrect product assessment',
-                },
-                missingMessage: t('account.supportEmailMissing'),
-                failedMessage: t('account.supportEmailFailed', {
-                  email: productIdentity.supportEmail || '',
-                }),
-              })
-            }
+            titleStyle={[styles.cardTitle, { color: emerald.ink }]}
+            title={t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
+            productContext={{
+              barcode: String(barcode || ''),
+              productName: product?.product_name || product?.product_name_en,
+              brand: product?.brands,
+            }}
             testID="result-report-assessment"
-          >
-            <Text style={[styles.cardTitle, { color: emerald.ink }]}>
-              {t('result.reportIncorrectAssessment', 'Report incorrect assessment')}
-            </Text>
-          </TouchableOpacity>
+          />
 
           {/* Result card heading is "What we noticed:"; share/look-through keep SCORE_HIGHLIGHTS_HEADING. */}
           {scoreHighlights && scoreHighlights.promoted.length > 0 && (

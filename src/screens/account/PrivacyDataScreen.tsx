@@ -88,7 +88,7 @@ export default function PrivacyDataScreen() {
   const handleClearCache = () => {
     const clearCacheMessage =
       cacheSize === null
-        ? `${t('settings.clearCacheMessage', { count: 0 })} (${t('account.cacheCountUnavailable')})`
+        ? t('account.clearCacheCountUnknown')
         : t('settings.clearCacheMessage', { count: cacheSize });
     Alert.alert(t('settings.clearCache'), clearCacheMessage, [
       { text: t('common.cancel'), style: 'cancel' },

@@ -39,6 +39,25 @@ export const PRODUCT_REPORT_CONCERN_TYPES = [
   'other',
 ] as const;
 
+export type ProductReportConcernType = (typeof PRODUCT_REPORT_CONCERN_TYPES)[number];
+
+/** i18n keys for accessible concern labels shown before opening a report mailto. */
+export const PRODUCT_REPORT_CONCERN_LABEL_KEYS: Record<
+  ProductReportConcernType,
+  string
+> = {
+  barcode_or_identity: 'account.reportConcernBarcode',
+  name_or_brand: 'account.reportConcernNameBrand',
+  ingredients_or_nutrition: 'account.reportConcernIngredients',
+  origins: 'account.reportConcernOrigins',
+  certification_or_benchmark: 'account.reportConcernCert',
+  manufacturer_or_parent: 'account.reportConcernManufacturer',
+  assessment_or_score_explanation: 'account.reportConcernAssessment',
+  recall_or_signal: 'account.reportConcernRecall',
+  share_or_preview: 'account.reportConcernShare',
+  other: 'account.reportConcernOther',
+};
+
 export const HELP_FAQ_ITEMS = [
   { titleKey: 'account.faqScoreHow', bodyKey: 'account.faqScoreHowBody', testID: 'help-faq-scoreHow' },
   { titleKey: 'account.faqNrWhy', bodyKey: 'account.faqNrWhyBody', testID: 'help-faq-nrWhy' },

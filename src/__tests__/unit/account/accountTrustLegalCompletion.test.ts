@@ -82,12 +82,25 @@ describe('Account Trust completion — help', () => {
   test('help keeps product report distinct from privacy and does not claim receipt', () => {
     const help = read('src/screens/account/HelpSupportScreen.tsx');
     expect(help).toMatch(/openAssessmentReport/);
+    expect(help).toMatch(/ProductReportConcernPicker/);
     expect(help).toMatch(/buildManufacturerReviewMailto/);
     expect(help).toMatch(/buildTechnicalSupportMailto/);
     expect(help).toMatch(/PrivacyData/);
     expect(en.account.helpIntro).toMatch(/does not mean a report was received/i);
     expect(en.account.helpEmailOpensOnly).toMatch(/do not create a ticket/i);
     expect(en.account.reportProductExplain).toMatch(/does not automatically change a score/i);
+    expect(en.account.reportConcernTitle).toMatch(/What needs review/i);
+  });
+
+  test('selected concern type is written into assessment mailto body', () => {
+    const decoded = decodeURIComponent(
+      buildAssessmentReportMailto('s@t.test', 'Report', {
+        errorType: 'ingredients_or_nutrition',
+        barcode: '9414732208565',
+      }) || ''
+    );
+    expect(decoded).toMatch(/Concern type: ingredients_or_nutrition/);
+    expect(decoded).toMatch(/Barcode \/ GTIN: 9414732208565/);
   });
 
   test('official recall links are the founder-specified destinations', () => {

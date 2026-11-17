@@ -337,18 +337,23 @@ export async function clearCache(): Promise<void> {
 }
 
 /**
- * Get cache size (number of cached products)
+ * Get cache size (number of cached products).
+ * Returns `null` when storage/parse fails so callers do not treat unknown as zero.
+ * An empty/missing cache key is a genuine zero.
  */
-export async function getCacheSize(): Promise<number> {
+export async function getCacheSize(): Promise<number | null> {
   try {
     const cacheData = await AsyncStorage.getItem(CACHE_STORAGE_KEY);
     if (!cacheData) return 0;
 
     const cache: Record<string, CachedProduct> = JSON.parse(cacheData);
+    if (!cache || typeof cache !== 'object' || Array.isArray(cache)) {
+      throw new Error('Product cache is not a valid object map');
+    }
     return Object.keys(cache).length;
   } catch (error) {
     logger.error('Error getting cache size', error);
-    return 0;
+    return null;
   }
 }
 

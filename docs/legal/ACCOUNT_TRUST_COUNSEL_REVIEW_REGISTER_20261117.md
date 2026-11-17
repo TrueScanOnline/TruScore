@@ -12,7 +12,7 @@
 | Published Privacy Policy / Terms | Drafts only; `legalDestinations.*.ready` false | Counsel + founders |
 | Privacy officer / APP / NZ PA applicability | Entity and processing map incomplete | Counsel |
 | Monitored support inbox / dispute staffing | Support email often unconfigured | Operations + founders |
-| OFF image share-alike / native Share Card attribution | Native card lacks on-card CC BY-SA line | Counsel + product |
+| OFF image share-alike / native Share Card attribution | Native card lacks on-card CC BY-SA line; Account disclosure does not cure; proposed conditional attribution text prepared in `ACCOUNT_TRUST_OFF_SHARE_CARD_ATTRIBUTION_PROPOSAL_20261117.md` (not implemented) | Counsel + product |
 | BBFAW / KnowTheChain reuse and endorsement risk | Rights clearance incomplete | Counsel |
 | Liability caps / unfair terms / consumer guarantees | Draft Terms APPROVAL REQUIRED | Counsel |
 | Media/tech E&O, cyber, D&O insurance | Commercial decision | Founders |

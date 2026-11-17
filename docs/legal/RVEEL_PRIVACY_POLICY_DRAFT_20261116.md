@@ -1,10 +1,12 @@
 # RVEEL Privacy Policy
 
 > **DRAFT — NOT APPROVED FOR PUBLICATION**
-> **Draft date:** 16 November 2026 (reconciled same day — Phase B2 Final Legal Documentation Reconciliation)
-> **Basis:** Verified MVP data flows on branch `build/w5-founders-native-20261114`; reconciliation against HEAD `1f04a3fc8d10b3aaa662c982d36b379194af0296`.
+> **Draft date:** 16 November 2026 (factual code reconciliation updated 17 November 2026 — Account Trust closeout)
+> **Basis:** Verified MVP data flows on branch `build/w5-founders-native-20261114`; factual reconciliation against Account Trust implementation (see `docs/legal/ACCOUNT_TRUST_DRAFT_RECONCILIATION_20261117.md`).
 > **Companion evidence:** `docs/legal/STAGE2_B2_LEGAL_RISK_AND_LICENSING_20261116.md`
 > This draft is for founder and NZ/Australian counsel review. It is **not** live at https://truescan.app/privacy. Account legal destinations remain `ready: false`.
+>
+> **Factual corrections vs substantive legal questions:** Updates marked *Factual (code)* reflect verified app behaviour. Items marked **APPROVAL REQUIRED** / **INTERPRETATION — counsel** remain unresolved legal decisions and are **not** answered by engineering.
 
 ---
 
@@ -119,8 +121,8 @@ We handle information to:
 
 - Identify products and display assessments and related content.
 - Cache data for performance.
-- Enable sharing and preview pages, and record successful share events for operations and abuse diagnosis.
-- Support optional user contributions and evidence workflows when enabled.
+- Enable sharing and preview pages. Optional share-event telemetry and local share analytics are **gated and default OFF** in the current MVP (*Factual (code)*); essential functional share/preview requests may still occur when you share.
+- Support optional user contributions and evidence workflows when those features are enabled in a given build. Public Open Food Facts contribution remains **default disabled** until explicit consent controls are approved (*Factual (code)*).
 - Secure services, prevent abuse and diagnose faults.
 - Comply with law and respond to legitimate requests.
 
@@ -133,8 +135,10 @@ We handle information to:
 | History / favourites / settings | Yes | Not by default for those stores |
 | Product catalogue fields | Cached copies | Retrieved from Open Food Facts / Rveel APIs |
 | Share preview | Generates link on device | Preview host may fetch and display product fields/images |
-| Share event | Local log always; successful shares may also POST | Rveel backend logs barcode/platform/item/time |
-| Evidence contributions | Prepared locally | Submitted to Rveel backends when you contribute; private blob for EA images |
+| Share event | Local share analytics only if explicitly enabled (default OFF); outbound `/api/share-event` only if explicitly enabled (default OFF) (*Factual (code)*) | Rveel backend may log barcode/platform/item/time **only when** share-event telemetry is enabled |
+| Evidence contributions | Prepared locally when contribution features are used | Submitted to Rveel backends when you contribute; private blob for EA images. Public OFF write paths default disabled (*Factual (code)*) |
+| Guest Account / Privacy requests | Device clears for history, favourites and product cache; dedicated personal-information request mailto categories when support email is configured (*Factual (code)*) | Opening email does **not** complete server deletion or create a ticket |
+| Administrative publication hold | Not a local privacy control | Founder/admin API may temporarily withhold consumer publication of an assessment without changing scoring engines (*Factual (code)*); distinct from NR/Checking |
 
 ---
 

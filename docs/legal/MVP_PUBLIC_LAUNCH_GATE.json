@@ -166,7 +166,7 @@
         "asOf": "2026-11-16",
         "implementationState": "PARTIAL_TECHNICAL",
         "riskPriority": "Critical",
-        "whatExistsOrIsReported": "OFF attribution added on share landing; app and previews use OFF products/images. Licence review identified ODbL database, DbCL content and CC BY-SA photographs; full commercial share-alike/attribution/derivative database analysis unresolved.",
+        "whatExistsOrIsReported": "OFF attribution added on share landing; app and previews use OFF products/images. Licence review identified ODbL database, DbCL content and CC BY-SA photographs; full commercial share-alike/attribution/derivative database analysis unresolved. Native ShareProductStoryCard still lacks an on-card OFF/CC BY-SA line (Account disclosure does not cure). Exact proposed Share Card attribution change prepared 2026-11-17 for founder/counsel review; not implemented pending provenance wording approval.",
         "whatMustHappenBeforeApproval": "Counsel/rights specialist to map each OFF use (raw data, scores, caches, product photos, native share cards, OG teasers, exports) against ODbL/DbCL/CC BY-SA, compatibility, attribution, share-alike and packaging/trademark rights. Validate current OFF API terms and rate limits. If clearance incomplete, restrict the specific unlicensed output, not alter numerical score engines.",
         "responsibleReviewers": "Licensing counsel and data product owner",
         "isApproval": false

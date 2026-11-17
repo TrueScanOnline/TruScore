@@ -1,10 +1,12 @@
 # RVEEL Terms of Use
 
 > **DRAFT — NOT APPROVED FOR PUBLICATION**
-> **Draft date:** 16 November 2026 (reconciled same day — Phase B2 Final Legal Documentation Reconciliation)
-> **Basis:** Verified MVP behaviour on branch `build/w5-founders-native-20261114`; reconciliation against HEAD `1f04a3fc8d10b3aaa662c982d36b379194af0296`.
+> **Draft date:** 16 November 2026 (factual code reconciliation updated 17 November 2026 — Account Trust closeout)
+> **Basis:** Verified MVP behaviour on branch `build/w5-founders-native-20261114`; factual reconciliation against Account Trust implementation (see `docs/legal/ACCOUNT_TRUST_DRAFT_RECONCILIATION_20261117.md`).
 > **Companion evidence:** `docs/legal/STAGE2_B2_LEGAL_RISK_AND_LICENSING_20261116.md`
 > This draft is for founder and NZ/Australian counsel review. It is **not** live at https://truescan.app/terms. Account legal destinations remain `ready: false`.
+>
+> **Factual corrections vs substantive legal questions:** Updates marked *Factual (code)* reflect verified app behaviour. Items marked **APPROVAL REQUIRED** / **INTERPRETATION — counsel** remain unresolved and are **not** answered by engineering.
 
 **These Terms do not eliminate legal liability.** They allocate responsibility where the law allows and describe how Rveel works. Non-excludable consumer rights remain. Nothing in these Terms is a claim of legal immunity.
 
@@ -44,14 +46,14 @@ For guest MVP use, Rveel’s **recommended** acceptance mechanism (not fully imp
 | Mechanism | Status in current build |
 |---|---|
 | Merely displaying legal text in onboarding | Possible on the legal step path |
-| Making Terms/Privacy URLs ready in Account | **`legalDestinations.*.ready` is false** — destinations not published |
-| Affirmative acknowledgement | Only if the user completes the legal step (not Skip) |
-| Recording `legalDisclaimersAcceptedAt` | Set on legal-step completion; **null** if the user uses **Skip intro** |
+| Making Terms/Privacy URLs ready in Account | **`legalDestinations.*.ready` is false** — destinations not published (*Factual (code)*) |
+| Affirmative acknowledgement | Required before onboarding completion |
+| Recording `legalDisclaimersAcceptedAt` | Set on legal-step completion (*Factual (code)*) |
+| Skip intro | Skips **educational slides only**; routes to the legal step if acknowledgement is not yet recorded; completion is refused without `legalDisclaimersAcceptedAt` (*Factual (code)* — prior Skip-bypass mitigated) |
+| Guest mode | No cloud customer account, Premium/billing or authentication in this MVP (*Factual (code)*) |
 | Legal enforceability of “use = agree” alone | **INTERPRETATION — counsel**; browsewrap is weaker than recorded clickwrap |
 
-**Corrected position:** Publishing these draft Terms does **not** by itself create a reliable acceptance record. The Skip intro path can complete onboarding without a legal-acceptance timestamp. Do not treat the existence of the timestamp field as proof that every user accepted.
-
-Until a fail-closed acknowledgement ships, any temporary “by accessing or using the App you agree” language is a **counsel-risk interim** and must not be described as a completed control.
+**Corrected position (*Factual (code)*):** Skip intro no longer completes onboarding without legal acknowledgement. Publishing these draft Terms still does **not** by itself create a counsel-approved public acceptance programme: Account Privacy/Terms destinations remain unpublished (`ready: false`), and binding clickwrap against published documents remains **APPROVAL REQUIRED**.
 
 If you do not agree to Terms that are lawfully presented and accepted, do not use the App.
 
@@ -149,7 +151,7 @@ Product fields and photographs sourced from Open Food Facts remain subject to Op
 
 > If you choose to contribute a product photograph or product data to Open Food Facts through Rveel, you confirm that: (a) you took the photograph yourself or otherwise have the rights required by Open Food Facts; (b) the information comes from the product packaging; and (c) you irrevocably agree that Open Food Facts may publish the data under the Database Contents Licence and the photograph under the Creative Commons Attribution-ShareAlike licence, on Open Food Facts’ terms of contribution. Contributions may become public, may be edited by others, and generally cannot be made private later.
 
-**Current MVP gap:** Some photo and manual-product flows can dispatch content to Open Food Facts **without** a dedicated contribution opt-in screen. Existing camera permission or general onboarding text must **not** be treated as satisfying Open Food Facts’ contributor-licence requirements. A separate affirmative control is recommended before launch of any automatic OFF publish path (**founder + counsel**; implementation not in this documentation phase).
+**Current MVP control (*Factual (code)*):** Public Open Food Facts contribution write paths are **default disabled** by `isOffPublicContributionEnabled()` until explicit consent controls are approved. Existing camera permission or general onboarding text must **not** be treated as satisfying Open Food Facts’ contributor-licence requirements. A separate affirmative control remains required before any automatic OFF publish path is enabled (**founder + counsel**).
 
 Guided contribution / Community Agreements features may be disabled in store MVP builds.
 
@@ -163,19 +165,24 @@ Benchmark datasets (for example BBFAW and KnowTheChain extracts used in Claims) 
 
 You must not remove attribution notices that Rveel displays. Rveel’s compliance programme for these licences is described for counsel in the B2 risk pack and remains subject to approval before public launch claims of compliance.
 
+**Native Share Card gap (*Factual (code)*):** Web share-preview pages may show an Open Food Facts / CC BY-SA attribution line when a product image is present. The native `ShareProductStoryCard` does **not** currently render an equivalent on-card attribution line. Account Legal disclosures that mention this gap do **not** cure the rights issue. Closing this gap is an explicit public-release dependency (see `docs/legal/ACCOUNT_TRUST_OFF_SHARE_CARD_ATTRIBUTION_PROPOSAL_20261117.md`).
+
 ---
 
 ## 10. Reporting incorrect information
 
-If you believe a product identity or assessment is wrong:
+If you believe a product identity or assessment is wrong (*Factual (code)*):
 
-1. Note the barcode, product name, what is wrong, and when you saw it;
-2. Contact **[APPROVAL REQUIRED — support/legal email]**;
-3. Include photos of the pack where helpful.
+1. Use Help & Support → Report incorrect product information (or Result → Report) when a support email is configured;
+2. Choose a concern classification (identity, nutrition, origins, certifications, manufacturer association, assessment explanation, recall/signal, share/preview, or other);
+3. Include barcode/product context when already available; optional pack photos may help;
+4. Opening an email draft does **not** confirm receipt, create a ticket, or automatically change a score.
 
-We will review reports under our manufacturer/consumer correction process once adopted (see companion risk pack §5A). That process is an **operational** commitment by Rveel when staffed; it is **not** a guaranteed public SLA and does **not** create a live manufacturer portal or one-click takedown button in the App today.
+Manufacturer/brand-owner review and personal-information requests use separate Help / Privacy routes. We will review reports under our manufacturer/consumer correction process once staffed (see companion risk pack §5A and `MVP_DISPUTE_CASE_HANDLING_PROCEDURE_20261116.md`). That process is an **operational** commitment by Rveel when staffed; it is **not** a guaranteed public SLA and does **not** create a live manufacturer portal or one-click takedown button in the App today.
 
 Open Food Facts catalogue errors may also need to be corrected upstream on Open Food Facts.
+
+**Administrative publication hold (*Factual (code)*):** An authorised founder/admin hold may temporarily withhold consumer publication of an assessment. Hold is **not** UnRevealed (NR), **not** Checking, and does **not** alter scoring engines.
 
 ---
 
@@ -203,7 +210,7 @@ Third-party trademarks and certification marks remain with their owners. Open Fo
 
 If you share product links or images, you are responsible for how and where you share them. Preview pages may omit scores; native shares may include published assessment elements when a score is published. Shared copies may persist outside Rveel’s control even if Rveel later corrects an assessment.
 
-Successful shares may generate operational share-event records as described in the Privacy Policy draft.
+Optional share-event telemetry and local share analytics are **gated and default OFF** in the current MVP (*Factual (code)*). Successful shares do **not** automatically generate outbound share-event posts unless those gates are explicitly enabled. See the Privacy Policy draft.
 
 ---
 

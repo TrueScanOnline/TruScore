@@ -7,6 +7,7 @@ import AccountScreenShell from '../../components/account/AccountScreenShell';
 import AccountSection from '../../components/account/AccountSection';
 import AccountRow from '../../components/account/AccountRow';
 import AccountExpandable from '../../components/account/AccountExpandable';
+import ProductReportConcernPicker from '../../components/account/ProductReportConcernPicker';
 import { productIdentity } from '../../config/productIdentity';
 import { getInstalledAppVersion } from '../../utils/appVersion';
 import { resultEmeraldCard, resultEmeraldTone } from '../../theme/resultPresentation';
@@ -42,6 +43,7 @@ export default function HelpSupportScreen() {
   const supportEmail = productIdentity.supportEmail.trim();
   const supportConfigured = supportEmail.length > 0;
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [reportPickerOpen, setReportPickerOpen] = useState(false);
   const version = getInstalledAppVersion();
 
   const missing = t('account.supportEmailMissing');
@@ -116,12 +118,7 @@ export default function HelpSupportScreen() {
           value={supportConfigured ? undefined : t('account.supportNotConfiguredShort')}
           onPress={() =>
             requireSupport(() => {
-              void openAssessmentReport({
-                subject: t('account.supportSubjectReport'),
-                fields: { errorType: 'other' },
-                missingMessage: missing,
-                failedMessage: failed,
-              });
+              setReportPickerOpen(true);
             })
           }
           accessibilityHint={t('account.a11yReportProblem')}
@@ -129,6 +126,20 @@ export default function HelpSupportScreen() {
           isLast
         />
       </AccountSection>
+
+      <ProductReportConcernPicker
+        visible={reportPickerOpen}
+        onCancel={() => setReportPickerOpen(false)}
+        onSelect={(concern) => {
+          setReportPickerOpen(false);
+          void openAssessmentReport({
+            subject: t('account.supportSubjectReport'),
+            fields: { errorType: concern },
+            missingMessage: missing,
+            failedMessage: failed,
+          });
+        }}
+      />
 
       <AccountSection title={t('account.manufacturerSection')}>
         <View style={styles.explainWrap}>

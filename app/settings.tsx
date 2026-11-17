@@ -45,7 +45,7 @@ export default function SettingsScreen() {
     setPlanetPackagingMarket,
   } = useSettingsStore();
   const { recentScans, clearHistory } = useScanStore();
-  const [cacheSize, setCacheSize] = React.useState<number>(0);
+  const [cacheSize, setCacheSize] = React.useState<number | null>(null);
   const [fsanzImportModalVisible, setFsanzImportModalVisible] = React.useState(false);
 
   React.useEffect(() => {
@@ -58,9 +58,13 @@ export default function SettingsScreen() {
   };
 
   const handleClearCache = () => {
+    const message =
+      cacheSize === null
+        ? t('account.clearCacheCountUnknown')
+        : t('settings.clearCacheMessage', { count: cacheSize });
     Alert.alert(
       t('settings.clearCache'),
-      t('settings.clearCacheMessage', { count: cacheSize }),
+      message,
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -293,7 +297,11 @@ export default function SettingsScreen() {
           <SettingRow
             icon="folder-outline"
             label={t('settings.cachedProducts')}
-            value={t('settings.products', { count: cacheSize })}
+            value={
+              cacheSize === null
+                ? t('account.cacheCountUnavailable')
+                : t('settings.products', { count: cacheSize })
+            }
           />
           <SettingRow
             icon="trash-outline"
