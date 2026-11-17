@@ -4,7 +4,9 @@
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`  
 **Verified starting remote HEAD:** `567a8ab1915db96ecec4a7ff3bfff3a249163da8`  
 **Implementation SHA:** `956886b7eb60f87de75c82082f0e43ee8a4efbb9`  
-**Final pushed tip:** `62934ff1a230ca6e1aac241c87ef5452033e7297`
+**Independent-review tip (source acceptance candidate):** `47ba9cc3685b59398855ac042b049d2b37e54797`  
+**Note:** An earlier docs commit incorrectly labelled `62934ff…` as the final tip; that SHA is the parent of `47ba9cc…`. See `MVP_PRESELECTED_ONLY_ACCEPTANCE_RESPONSE_20261117.md` for operational FAIL remediation and any later deployment SHA (deployment ≠ Git tip).  
+**FM-03R precision:** Claims-NR gated in the **client** Result journey only. Server-side Claims-NR admission enforcement is **deferred** (AMBER/RED).
 
 ---
 
@@ -54,7 +56,7 @@ Historical evidence and existing scores are not deleted or rewritten merely beca
 
 | Input class | Consumer MVP |
 |-------------|--------------|
-| FM-03R `packet_absence_user_attestation` | **Allowed** when Claims NR eligibility + authority env |
+| FM-03R `packet_absence_user_attestation` | **Allowed** when **client** Claims NR eligibility + authority env (server does not re-check Claims NR) |
 | Community Agreement **agree** | **Allowed** when `EXPO_PUBLIC_MVP_COMMUNITY_AGREEMENTS=1` |
 | Governed country / origin claim type / cert ID / packet-claim option (standalone, no free text/photo) | **Unavailable** — deferred gap (no inventoried taxonomy/path) |
 | Photos, free text, manual product, VLM/OCR | **Forbidden** |
@@ -84,7 +86,7 @@ Historical evidence and existing scores are not deleted or rewritten merely beca
 | | FM-03 photo | FM-03R attestation |
 |--|-------------|-------------------|
 | MVP consumer entry | **Retired** | **Retained** |
-| Eligibility | n/a | Claims NR gates **not** broadened to Rated |
+| Eligibility | n/a | **Client** Claims NR gates **not** broadened to Rated; server NR enforcement deferred |
 | Characterisation | Photograph | User attestation (not independently verified) |
 
 ---
@@ -93,8 +95,9 @@ Historical evidence and existing scores are not deleted or rewritten merely beca
 
 - Preselected-only Origins (country + claim type without free text/photo) as a dedicated consumer path.
 - Catalogue-only certification / packet-claim selection without free text.
-- Server-side Claims NR requirement for FM-03R admission (AMBER/RED).
+- Server-side Claims NR requirement for FM-03R admission (AMBER/RED) — **explicitly deferred**; do not claim server NR-only admission.
 - Variant-scoped absence presentation (AMBER, preserved).
+- Operational UAT API containment until redeploy + live 403 probes (acceptance response).
 
 ---
 

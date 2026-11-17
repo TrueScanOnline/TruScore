@@ -3,6 +3,32 @@
  * Configures test environment and mocks
  */
 
+// R-8 / wave4aSharedAuthority: PostgresAuthorityStore imports synced backend modules.
+// `backend/vercel/truescan-src` is gitignored; sync from `src/` when absent so clean checkouts pass.
+(() => {
+  try {
+    const fs = require('fs') as typeof import('fs');
+    const path = require('path') as typeof import('path');
+    const { spawnSync } = require('child_process') as typeof import('child_process');
+    const marker = path.join(
+      process.cwd(),
+      'backend',
+      'vercel',
+      'truescan-src',
+      'evidenceAuthority',
+      'schemaReady.ts'
+    );
+    if (!fs.existsSync(marker)) {
+      const script = path.join(process.cwd(), 'backend', 'vercel', 'scripts', 'syncTruescanSrc.cjs');
+      if (fs.existsSync(script)) {
+        spawnSync(process.execPath, [script], { stdio: 'ignore' });
+      }
+    }
+  } catch {
+    /* leave sync optional; suites that need it will fail loudly */
+  }
+})();
+
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),

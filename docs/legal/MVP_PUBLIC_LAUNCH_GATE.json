@@ -562,6 +562,19 @@
           "backend/vercel/api/evidence-authority.ts"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
+      },
+      {
+        "date": "2026-11-17",
+        "reviewer": "Independent acceptance + Cursor remediation",
+        "status": "MVP_PRESELECTED_ONLY_OPERATIONAL_REMEDIATION_NONBINDING",
+        "title": "Response to operational FAIL — UAT deploy/alias + evidence tip + R-8 sync disposition",
+        "meaning": "Nonbinding. Independent review rejected operational acceptance at 47ba9cc because live UAT still served legacy validators. Remediation deployed dpl_DGYNnsQuQ9161yCEUK3LoCFYD2hM to truscoreapi-uat, remapped the public alias, and obtained policy 403 responses. FM-03R Claims-NR remains client-only (server NR deferred). publicReleaseStatus stays BLOCKED.",
+        "verificationStatus": "UAT_LIVE_POLICY_403_PROBES_PASS_DEVICE_MATRIX_PARTIAL_FM03R_SERVER_NR_DEFERRED",
+        "relevantEvidence": [
+          "docs/uat/MVP_PRESELECTED_ONLY_ACCEPTANCE_RESPONSE_20261117.md",
+          "docs/uat/MVP_PRESELECTED_ONLY_CONTRIBUTION_CONTAINMENT_20261117.md"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
       }
     ]
   },
