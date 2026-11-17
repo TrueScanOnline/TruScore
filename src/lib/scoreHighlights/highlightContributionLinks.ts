@@ -115,23 +115,45 @@ export function claimsPacketAbsenceContradicted(product: Product): boolean {
  * Only when Claims is settled NR with no published score. Does not admit evidence.
  * The button tap itself is the explicit declaration (photo-free attestation).
  */
+/**
+ * Exact FM-03R rejection reason for diagnostics / UAT.
+ * Returns null when photo-free absence is eligible. Does not broaden gates.
+ */
+export function claimsPacketAbsencePillarIneligibilityReason(
+  product: Product,
+  publication: CrossPillarPublicationSnapshot | null | undefined,
+  actions: ResultContributionActions
+): string | null {
+  if (!isGuidedContributionSubmitEnabled()) return 'guided_contribution_disabled';
+  if (!publication || publication.settled !== true) return 'publication_not_settled';
+  if (publication.overall?.publicationStatus === 'checking') return 'overall_checking';
+  if (publication.claims?.publicationStatus !== 'nr') {
+    return `claims_status_${publication.claims?.publicationStatus ?? 'missing'}`;
+  }
+  if (publication.claims.publishedScore != null) return 'claims_published_score_present';
+  if (!publication.claims?.assessmentLanes) return 'claims_lanes_missing';
+  if (publication.claims.assessmentLanes.packet === 'assessed') return 'packet_lane_assessed';
+  if (!liveOpportunity(publication.claims.s26?.contributionOpportunity)) {
+    return 'claims_s26_opportunity_not_live';
+  }
+  if (actions.packetInformationAction !== 'add') return 'packet_add_not_eligible';
+  if (product.rveelPacketAbsenceEstablished === true) return 'absence_already_admitted';
+  if (claimsPacketAbsenceContradicted(product)) return 'contradictory_packet_evidence';
+  return null;
+}
+
 export function claimsPacketAbsencePillarEligible(
   product: Product,
   publication: CrossPillarPublicationSnapshot,
   actions: ResultContributionActions
 ): boolean {
-  if (!isGuidedContributionSubmitEnabled()) return false;
-  if (publication.settled !== true) return false;
-  if (publication.overall?.publicationStatus === 'checking') return false;
-  if (publication.claims?.publicationStatus !== 'nr') return false;
-  if (publication.claims.publishedScore != null) return false;
-  if (!publication.claims?.assessmentLanes) return false;
-  if (publication.claims.assessmentLanes.packet === 'assessed') return false;
-  if (!liveOpportunity(publication.claims.s26?.contributionOpportunity)) return false;
-  if (actions.packetInformationAction !== 'add') return false;
+  return claimsPacketAbsencePillarIneligibilityReason(product, publication, actions) == null;
+}
+
+/** Empty Packet Claims card may offer photo-supported FM-03 when no positive packet evidence is shown. */
+export function packetClaimsPhotoAbsenceDiscoverable(product: Product): boolean {
   if (product.rveelPacketAbsenceEstablished === true) return false;
-  if (claimsPacketAbsenceContradicted(product)) return false;
-  return true;
+  return !claimsPacketAbsenceContradicted(product);
 }
 
 export function highlightContributionOffer(

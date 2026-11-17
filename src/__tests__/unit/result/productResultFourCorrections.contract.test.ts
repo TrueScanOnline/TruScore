@@ -65,6 +65,8 @@ describe('Product Result four corrections contracts', () => {
     expect(result.split('testID="result-report-assessment"').length - 1).toBe(1);
     expect(result.split('testID="result-report-assessment-hold"').length - 1).toBe(1);
     expect(result).toContain('fixedConcern="administrative_hold_or_review"');
+    expect(result).toContain("publicationHold?.status === 'held'");
+    expect(result).toContain("publicationStatus === 'nr'");
     expect(result).toContain('navigateToScanHome(navigation)');
   });
 

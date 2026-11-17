@@ -125,8 +125,13 @@ import {
   type ScoreHighlightStory,
 } from '../../src/lib/scoreHighlights';
 import {
+  CLAIMS_PACKET_ABSENCE_PILLAR_LABEL,
+  CLAIMS_PACKET_ABSENCE_SUPPORTING_COPY,
+  claimsPacketAbsencePillarEligible,
+  claimsPacketAbsencePillarIneligibilityReason,
   highlightContributionOffer,
   highlightContributionTap,
+  packetClaimsPhotoAbsenceDiscoverable,
 } from '../../src/lib/scoreHighlights/highlightContributionLinks';
 import type { TruScoreResult } from '../../src/lib/truscoreEngine';
 import type { ScoreHighlightL3InAppTarget } from '../../src/lib/scoreHighlights/l3/targets';
@@ -686,7 +691,7 @@ function ResultScreenContent() {
   const [claimsAbsenceAttestationError, setClaimsAbsenceAttestationError] = useState<string | null>(null);
   const claimsAbsenceInFlightRef = useRef(false);
   const [contributionChoice, setContributionChoice] = useState<
-    null | 'nutrition' | 'packet' | 'origins' | 'productInformation'
+    null | 'nutrition' | 'packet' | 'origins' | 'productInformation' | 'packetClaimsAdd'
   >(null);
   const [contributionNotice, setContributionNotice] = useState<string | null>(null);
   const [celebrationVisible, setCelebrationVisible] = useState(false);
@@ -2210,6 +2215,10 @@ function ResultScreenContent() {
     openContribution(destination, link.journey, true, 'default');
   };
 
+  /**
+   * FM-03R photo-free attestation — shared by Claims pillar look-through and empty Packet Claims Add.
+   * Revalidates eligibility immediately before submit; opening a sheet alone does not attest.
+   */
   const submitClaimsAbsenceAttestationFromPillar = async (
     liveProduct: Product,
     liveBarcode: string
@@ -2217,11 +2226,19 @@ function ResultScreenContent() {
     if (claimsAbsenceInFlightRef.current) return;
     if (getPrimaryBarcode(liveProduct.barcode) !== getPrimaryBarcode(liveBarcode)) return;
     if (publicationSettled !== true) return;
+    if (publicationHold?.status === 'held') return;
     const link = highlightContributionTap(liveProduct, 'Ethics', 'packetClaims', {
       publicationSettled,
       linkKey: 'packet-absence',
     });
     if (!link || link.kind !== 'absence') return;
+    const actionsNow = resultContributionActions(liveProduct);
+    if (
+      !liveProduct._publication ||
+      !claimsPacketAbsencePillarEligible(liveProduct, liveProduct._publication, actionsNow)
+    ) {
+      return;
+    }
 
     claimsAbsenceInFlightRef.current = true;
     setClaimsAbsenceAttestationState('submitting');
@@ -2244,6 +2261,7 @@ function ResultScreenContent() {
         setClaimsAbsenceAttestationState('idle');
         setClaimsAbsenceAttestationError(null);
         setScoreHighlightsRequest(null);
+        setContributionChoice(null);
         return;
       }
       setClaimsAbsenceAttestationState('failed');
@@ -3097,7 +3115,10 @@ function ResultScreenContent() {
                     onPress={() => {
                       const fresh = freshProductInformationMenu().find((row) => row.key === 'add-packet');
                       if (!fresh) return;
-                      openContribution('packetClaims', 'add', fresh.formFirst === true);
+                      // Choice sheet: add claim/cert vs FM-03R photo-free vs discoverable FM-03 photo path.
+                      setClaimsAbsenceAttestationState('idle');
+                      setClaimsAbsenceAttestationError(null);
+                      setContributionChoice('packetClaimsAdd');
                     }}
                     activeOpacity={0.7}
                     style={[styles.certificationsUpdateButton, { borderColor: emerald.action }]}
@@ -3274,8 +3295,8 @@ function ResultScreenContent() {
 
         <ProductDisclaimerCard />
 
-        {/* Report Incorrect Assessment — after Disclaimer; shared Rated/NR and hold footer. */}
-        {shouldWithholdConsumerPublication(publicationHold) ? (
+        {/* Report Incorrect Assessment — after Disclaimer; confirmed hold only uses hold context. */}
+        {publicationHold?.status === 'held' ? (
           <ProductAssessmentReportControl
             style={[styles.card, resultEmeraldCard(!!darkMode), styles.resultReportFooter]}
             titleStyle={[styles.cardTitle, { color: emerald.ink }]}
@@ -3294,7 +3315,11 @@ function ResultScreenContent() {
             }}
             testID="result-report-assessment-hold"
           />
-        ) : truScore ? (
+        ) : product &&
+          (truScore ||
+            (publicationSettled === true &&
+              (product._publication?.overall?.publicationStatus === 'nr' ||
+                product._publication?.overall?.publicationStatus === 'rated'))) ? (
           <ProductAssessmentReportControl
             style={[styles.card, resultEmeraldCard(!!darkMode), styles.resultReportFooter]}
             titleStyle={[styles.cardTitle, { color: emerald.ink }]}
@@ -3592,6 +3617,113 @@ function ResultScreenContent() {
                 >
                   <Text style={{ color: colors.text, fontSize: 18 }}>Add packet information</Text>
                 </TouchableOpacity>
+              </>
+            ) : null}
+            {contributionChoice === 'packetClaimsAdd' && product ? (
+              <>
+                <Text style={{ color: emerald.ink, fontSize: 20, fontWeight: '700', marginBottom: 4 }}>
+                  Packet claims
+                </Text>
+                <Text style={{ color: emerald.muted, fontSize: 15, marginBottom: 12 }}>
+                  Choose how you want to help with packet claims or certifications.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    const fresh = freshProductInformationMenu().find((row) => row.key === 'add-packet');
+                    if (!fresh) return;
+                    openContribution('packetClaims', 'add', fresh.formFirst === true, 'default');
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add a claim or certification"
+                  testID="result-packet-add-claim-or-cert"
+                  style={{
+                    minHeight: 56,
+                    borderRadius: 14,
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: emerald.line,
+                    paddingHorizontal: 14,
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
+                    Add a claim or certification
+                  </Text>
+                  <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
+                    Camera, gallery, or type what you see on the pack.
+                  </Text>
+                </TouchableOpacity>
+                {product._publication &&
+                claimsPacketAbsencePillarEligible(
+                  product,
+                  product._publication,
+                  resultContributionActions(product)
+                ) ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (!product || typeof barcode !== 'string') return;
+                      void submitClaimsAbsenceAttestationFromPillar(product, barcode);
+                    }}
+                    disabled={claimsAbsenceAttestationState === 'submitting'}
+                    accessibilityRole="button"
+                    accessibilityLabel={CLAIMS_PACKET_ABSENCE_PILLAR_LABEL}
+                    testID="result-packet-fm03r-absence"
+                    style={{
+                      minHeight: 56,
+                      borderRadius: 14,
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: emerald.line,
+                      paddingHorizontal: 14,
+                      justifyContent: 'center',
+                      marginBottom: 10,
+                      opacity: claimsAbsenceAttestationState === 'submitting' ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
+                      {CLAIMS_PACKET_ABSENCE_PILLAR_LABEL}
+                    </Text>
+                    <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
+                      {CLAIMS_PACKET_ABSENCE_SUPPORTING_COPY}
+                    </Text>
+                    {claimsAbsenceAttestationState === 'submitting' ? (
+                      <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 6 }}>
+                        Submitting your confirmation…
+                      </Text>
+                    ) : null}
+                    {claimsAbsenceAttestationError ? (
+                      <Text style={{ color: '#b00020', fontSize: 13, marginTop: 6 }}>
+                        {claimsAbsenceAttestationError}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                ) : null}
+                {packetClaimsPhotoAbsenceDiscoverable(product) ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      openContribution('packetClaims', 'add', false, 'packet_absence');
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Confirm absence with a pack photo"
+                    testID="result-packet-fm03-photo-absence"
+                    style={{
+                      minHeight: 56,
+                      borderRadius: 14,
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: emerald.line,
+                      paddingHorizontal: 14,
+                      justifyContent: 'center',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
+                      Confirm absence with a pack photo
+                    </Text>
+                    <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
+                      Photo-supported route. Attach a supporting pack image before the confirmation becomes
+                      available. Opening alone does not admit an absence.
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
               </>
             ) : null}
             {contributionChoice === 'origins' ? (
