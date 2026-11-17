@@ -4,7 +4,7 @@
 **Worktree:** `C:\TrueScan-FoodScanner-w5-unified-mvp-20261113`  
 **Verified starting remote HEAD:** `567a8ab1915db96ecec4a7ff3bfff3a249163da8`  
 **Implementation SHA:** `956886b7eb60f87de75c82082f0e43ee8a4efbb9`  
-**Final pushed tip:** *(filled after docs tip push)*
+**Final pushed tip:** `62934ff1a230ca6e1aac241c87ef5452033e7297`
 
 ---
 
