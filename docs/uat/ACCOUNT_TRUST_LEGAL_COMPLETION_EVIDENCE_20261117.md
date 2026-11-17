@@ -6,7 +6,7 @@
 **Verified starting SHA (Trust programme):** `1043a9e554a3bc8da6b467bc479c8b9a385d094c`  
 **Prior Trust tip before closeout:** `bfd7d0dc1077ad7c629435a79e9d0ab14bec2885`  
 **Closeout implementation SHA:** `2442ab320008d72e1e7ee18626db75c71c755f90`  
-**Final pushed tip SHA:** `2442ab320008d72e1e7ee18626db75c71c755f90`
+**Final pushed tip SHA:** `1cf02f1e5f4826902aca9f50fecf85c29a55273c`
 
 ## Doctrine classification
 
