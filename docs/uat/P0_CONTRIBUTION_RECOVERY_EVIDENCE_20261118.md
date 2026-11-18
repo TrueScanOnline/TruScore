@@ -1,7 +1,7 @@
 # P0 Contribution Recovery Evidence — 2026-11-18
 
 **publicReleaseStatus: BLOCKED**  
-**Branch tip (implementation):** *(fill after commit)*  
+**Branch tip (implementation):** `43b424dd466d3593faffa6bf1b94a71fa5191703`  
 **UAT deploy:** `dpl_AkpmnL9NBhAHxiPE9yaSpy84qm5i` → `https://truscoreapi-uat.vercel.app`
 
 ---
