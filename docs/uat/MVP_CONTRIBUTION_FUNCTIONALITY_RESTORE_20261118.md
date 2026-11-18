@@ -90,9 +90,10 @@ Explicit activation of containment requires founder-set `…_PRESELECTED_ONLY=1`
 | `tsc --noEmit` | **PASS** (exit 0) |
 | UAT backend redeploy | **`dpl_CnW7TWKFNyyaVUfD43VnAR3y72yK`** aliased to `truscoreapi-uat.vercel.app` |
 | Live probes post-restore | upload-photo / manual-products / manufacturing-country → **400** validation (not policy 403); EA authorize → **401** credential (not policy 403) |
-| Android UI (partial) | Expo Go Result `9414732208565`: Score 60; **Add product origins** + Packet Claims empty-state visible (`artifacts/mvp-contribution-restore-20261118/`, untracked). Take photo N/A (image present). |
-| Android E2E EA admission | See acceptance package below (device session). |
-| iOS | See acceptance package below. |
+| Android UI / guided entry | Expo Go: Origins modal (Camera/Gallery/Enter); Packet choice (Add claim/cert + FM-03 photo); FM-03 modal opens. Artifacts untracked under `artifacts/mvp-contribution-restore-20261118/`. |
+| Android live EA admit + reassessment | **OUTSTANDING** (UI path only; no UAT evidence mutation this package). |
+| iOS | **OUTSTANDING** (no iOS tooling on Windows host). |
+| Acceptance package | `docs/uat/MVP_CONTRIBUTION_RESTORE_ACCEPTANCE_PACKAGE_20261118.md` |
 
 ## SHAs (reconcile after commit)
 
