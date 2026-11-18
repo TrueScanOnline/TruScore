@@ -34,4 +34,4 @@ Living list of intended changes for the next UAT build. Each row is one accepted
 | Claims pillar / Packet Claims admitted-absence presentation consistency | `82ad94684df215c14080f88e863643dc244454d2` | on `build/w5-founders-native-20261114` |
 | MVP preselected-only contribution containment (no photos/free text/VLM) | `956886b7eb60f87de75c82082f0e43ee8a4efbb9` | on `build/w5-founders-native-20261114` |
 | Founder restore: preselected-only opt-in; re-entitle UAT/dev guided journeys | `b752fdf567a9ff7e36e6b24f1d5e45d1bb35fd23` | on `build/w5-founders-native-20261114` — **REJECTED as product baseline by 2026-11-18 corrective** |
-| Founder corrective: reaffirm preselected-only; retire free-form/FM-03 photo; keep FM-03R | *(fill after corrective commit)* | on `build/w5-founders-native-20261114` |
+| Founder corrective: reaffirm preselected-only; retire free-form/FM-03 photo; keep FM-03R | `e36ed7aa05c31abaea88516bac514a8d690b546b` | on `build/w5-founders-native-20261114` |

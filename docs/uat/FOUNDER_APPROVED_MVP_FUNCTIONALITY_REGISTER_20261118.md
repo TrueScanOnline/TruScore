@@ -135,7 +135,7 @@ Until then: **client solicitation remains the NR gate**; server still admits att
 |------|----------|
 | Containment (valid) | `956886b7eb60f87de75c82082f0e43ee8a4efbb9` |
 | Rejected restore | `b752fdf567a9ff7e36e6b24f1d5e45d1bb35fd23` |
-| Corrective implementation | *(fill after commit)* |
+| Corrective implementation | `e36ed7aa05c31abaea88516bac514a8d690b546b` |
 | UAT deploy | *(fill after deploy)* |
 
 **STOP for independent acceptance review. Do not declare restoration complete solely because buttons are visible.**
