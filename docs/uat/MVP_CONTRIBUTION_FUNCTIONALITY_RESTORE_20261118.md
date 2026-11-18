@@ -101,7 +101,7 @@ Explicit activation of containment requires founder-set `…_PRESELECTED_ONLY=1`
 | Pre-containment baseline | `567a8ab1915db96ecec4a7ff3bfff3a249163da8` |
 | Containment | `956886b7eb60f87de75c82082f0e43ee8a4efbb9` |
 | Docs tip before restore | `f99386d43cb502a26628a48cfc376999e3057cf0` |
-| Restore implementation commit | *(filled after push)* |
+| Restore implementation commit | `b752fdf567a9ff7e36e6b24f1d5e45d1bb35fd23` |
 | Deployed UAT backend (restore) | `dpl_CnW7TWKFNyyaVUfD43VnAR3y72yK` |
 | `publicReleaseStatus` | **BLOCKED** |
 
