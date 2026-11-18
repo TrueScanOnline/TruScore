@@ -2,6 +2,7 @@
 
 **Branch:** `recovery/w5-functional-baseline-20261119`  
 **Base tip:** `5f2dce9` (unified MVP / P0 stamp)  
+**Implementation SHA:** `31e7e441003e4c9296ec3e93b81ffb49117e2f04`  
 **Founder CF decisions:** approved 2026-11-19  
 **publicReleaseStatus:** **BLOCKED** — STOP for Stage 6 independent acceptance
 
