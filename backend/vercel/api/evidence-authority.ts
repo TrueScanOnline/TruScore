@@ -157,12 +157,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const action = typeof body.action === 'string' ? body.action : '';
     const adminHeader = req.headers['x-rveel-founder-admin'];
     const founderAdminToken = process.env.RVEEL_FOUNDER_ADMIN_TOKEN;
-    // MVP preselected-only: block photo / manual-text finalisation and prohibited submits early.
+    // MVP preselected-only: block photo / free-form manual-text and prohibited submits early.
+    // Structured Origins finalize-manual-text is narrowed inside the policy helper.
     if (action !== 'contribution-trace' && action !== 'issue-credential' && action !== 'withdraw' && action !== 'suppress') {
       const policyGate = rejectEvidenceAuthorityActionIfPolicyActive({
         action,
         adminHeader,
         founderAdminToken,
+        body,
         submitUsesProhibitedSource:
           action === 'submit'
             ? submitPayloadUsesProhibitedMvpSource({

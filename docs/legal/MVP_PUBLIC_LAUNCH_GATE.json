@@ -611,6 +611,20 @@
           "UAT deploy dpl_4PtMCMM8Mk3EDtvZK6T5jpGS2V2g"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
+      },
+      {
+        "date": "2026-11-18",
+        "reviewer": "Cursor engineering (founder P0 contribution recovery)",
+        "status": "MVP_P0_STRUCTURED_ORIGINS_AND_FM03R_RECOVERY_NONBINDING",
+        "title": "P0: structured Origins admit path + FM-03R celebration; photo-free MVP retained",
+        "meaning": "Nonbinding. Root cause of Origins Couldn’t-submit was finalize-manual-text 403 under preselected-only with no structured allowlist. Founder P0 authorised structured Origins (claim type + country, no free text/photo). Live UAT admitted made_in Antarctica on Cadbury 9300617064879 (dpl_AkpmnL9NBhAHxiPE9yaSpy84qm5i). FM-03R attestation admitted on 9300673999999; 15/25 remains methodology unit-proven; server Claims-NR gate still AMBER/RED. Android/iOS full UI matrix outstanding. publicReleaseStatus stays BLOCKED.",
+        "verificationStatus": "UAT_API_ORIGINS_AND_FM03R_ADMIT_PASS_DEVICE_MATRIX_PENDING",
+        "relevantEvidence": [
+          "docs/uat/P0_CONTRIBUTION_RECOVERY_EVIDENCE_20261118.md",
+          "artifacts/p0-contribution-recovery-20261118/",
+          "backend/vercel/lib/mvpContributionInputPolicy.ts"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
       }
     ]
   },

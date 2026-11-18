@@ -42,6 +42,28 @@ export function isClaimsAbsenceAttestationContributionEnabled(): boolean {
 }
 
 /**
+ * Structured Product Origins (claim type + governed country picker).
+ * Photo-free, no free-text wording, no typed percentage under preselected-only.
+ * Does not re-enable nutrition / packet / camera journeys.
+ */
+export function isStructuredOriginsContributionEnabled(): boolean {
+  if (!expectedAuthorityEnv()) return false;
+  if (!isMvpPreselectedOnlyConsumerPolicyActive()) {
+    return isGuidedContributionSubmitEnabled();
+  }
+  if (process.env.EXPO_PUBLIC_MVP_STRUCTURED_ORIGINS === '0') return false;
+  return (
+    isMvpConsumerInputClassPermitted('governed_country_choice') &&
+    isMvpConsumerInputClassPermitted('governed_origin_claim_type')
+  );
+}
+
+/** True when any MVP-allowed contribution modal destination may open. */
+export function isAnyMvpContributionModalEnabled(): boolean {
+  return isGuidedContributionSubmitEnabled() || isStructuredOriginsContributionEnabled();
+}
+
+/**
  * Community Agreements (WP09). Default OFF for MVP — no migration applied.
  * When OFF: no fetch/submit and no fabricated counts in UI.
  * Agree responses remain the only WP09 write when enabled; Correct targets free-form Change.

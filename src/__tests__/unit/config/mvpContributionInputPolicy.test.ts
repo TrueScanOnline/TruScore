@@ -62,12 +62,15 @@ describe('mvpContributionInputPolicy', () => {
     expect(mvpDiscoveryInputRestriction().unmatched_action).toContain('unavailable');
   });
 
-  it('keeps FM-03R available while free-form guided stays off under active policy', () => {
+  it('keeps FM-03R and structured Origins available while free-form guided stays off', () => {
     process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
     expect(isGuidedContributionSubmitEnabled()).toBe(false);
     expect(isClaimsAbsenceAttestationContributionEnabled()).toBe(true);
+    expect(isMvpConsumerInputClassPermitted('governed_country_choice')).toBe(true);
+    expect(isMvpConsumerInputClassPermitted('governed_origin_claim_type')).toBe(true);
+    expect(isMvpConsumerInputClassPermitted('photo_camera')).toBe(false);
   });
 
   it('deactivates only with explicit PRESELECTED_ONLY=0 (post-MVP)', () => {

@@ -2,9 +2,15 @@
  * Voluntary Result contribution menu.
  * Opens only journeys the settled card pencils already support.
  * A score, Confidence, or Highlight cannot create a row.
+ *
+ * Under MVP preselected-only: free-form rows stay hidden; structured Origins
+ * Add/Change remain when isStructuredOriginsContributionEnabled().
  */
 
-import { isGuidedContributionSubmitEnabled } from '../config/mvpFeatureGates';
+import {
+  isGuidedContributionSubmitEnabled,
+  isStructuredOriginsContributionEnabled,
+} from '../config/mvpFeatureGates';
 import type { Product } from '../types/product';
 import { productOriginsCardPresentation } from '../origins/productOriginsCard';
 import {
@@ -46,8 +52,9 @@ export function voluntaryContributionOffer(
   product: Product | null | undefined,
   options?: { publicationSettled?: boolean }
 ): VoluntaryContributionAction[] {
-  // MVP: hide submit destinations when guided contribution is not entitled.
-  if (!isGuidedContributionSubmitEnabled()) return [];
+  const freeForm = isGuidedContributionSubmitEnabled();
+  const structuredOrigins = isStructuredOriginsContributionEnabled();
+  if (!freeForm && !structuredOrigins) return [];
   if (options?.publicationSettled !== true) return [];
   const publication = product?._publication;
   if (!publication || publication.settled !== true) return [];
@@ -71,7 +78,7 @@ export function voluntaryContributionOffer(
   const actions = resultContributionActions(product as Product);
   const rows: VoluntaryContributionAction[] = [];
 
-  if (actions.updateNutrition) {
+  if (freeForm && actions.updateNutrition) {
     rows.push({
       key: 'change-nutrition',
       label: CHANGE_NUTRITION,
@@ -79,7 +86,7 @@ export function voluntaryContributionOffer(
       journey: 'change',
     });
   }
-  if (actions.updateIngredients) {
+  if (freeForm && actions.updateIngredients) {
     rows.push({
       key: 'change-ingredients',
       label: CHANGE_INGREDIENTS,
@@ -93,7 +100,7 @@ export function voluntaryContributionOffer(
     actions.originsAction === 'update' ||
     originsCard.facts.length > 0 ||
     Boolean(originsCard.offCountry);
-  if (originsPencil) {
+  if (structuredOrigins && originsPencil) {
     rows.push({
       key: 'add-origins',
       label: ADD_PRODUCT_ORIGINS,
@@ -115,7 +122,7 @@ export function voluntaryContributionOffer(
     (product?.rveelGovernedCertifications || []).length > 0 ||
     (product?.certifications || []).length > 0 ||
     product?.rveelPacketAbsenceEstablished === true;
-  if (packetPencil) {
+  if (freeForm && packetPencil) {
     rows.push({
       key: 'add-packet',
       label: ADD_PACKET_INFORMATION,

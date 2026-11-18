@@ -1,16 +1,23 @@
 /**
  * Server mirror of MVP preselected-only consumer contribution policy.
  *
- * Founder 2026-11-17 default-deny; founder 2026-11-18 corrective reaffirms it
- * after the rejected free-form restore. Must reject prohibited writes before
- * storage / finalisation.
+ * Default-deny photos / free text / VLM. Permitted writes:
+ * - FM-03R packet-absence attestation
+ * - Structured Product Origins (claim type + governed country; no statement /
+ *   free text / photo) — founder P0 2026-11-18 restore under MVP restrictions
  *
  * RVEEL_MVP_PRESELECTED_ONLY=0 deactivates (post-MVP founder approval only).
- * Ordinary consumers have no bypass. Founder-admin bypass requires matching
- * RVEEL_FOUNDER_ADMIN_TOKEN on X-Rveel-Founder-Admin (explicit, not consumer-reachable).
+ * Founder-admin bypass requires matching RVEEL_FOUNDER_ADMIN_TOKEN.
  */
 
 export const MVP_CONTRIBUTION_INPUT_POLICY_VERSION = 'mvp_preselected_only_v1_20261118';
+
+const STRUCTURED_ORIGIN_CLAIM_TYPES = new Set([
+  'grown_in',
+  'produced_in',
+  'made_in',
+  'packed_in',
+]);
 
 export function isMvpPreselectedOnlyPolicyActiveServer(): boolean {
   return process.env.RVEEL_MVP_PRESELECTED_ONLY !== '0';
@@ -70,6 +77,7 @@ const MVP_PERMITTED_EA_ACTIONS = new Set([
   'dispute',
   'evidence-image-profile',
   'finalize-packet-absence-attestation',
+  'finalize-manual-text', // narrowed below to structured Origins only
   'submit',
 ]);
 
@@ -77,17 +85,45 @@ const MVP_PERMITTED_EA_ACTIONS = new Set([
 const MVP_FORBIDDEN_EA_ACTIONS = new Set([
   'authorize-evidence-image',
   'finalize-evidence-image',
-  'finalize-manual-text',
   'upload-asset-chunk',
   'finalize-asset',
 ]);
+
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Structured Origins finalize body: claim type + country, no free-text statement,
+ * no typed percentage, no ingredient free text, no photo fields.
+ */
+export function isStructuredOriginsManualTextBody(body: Record<string, unknown>): boolean {
+  if (body.domain !== 'origins') return false;
+  if (body.packetAbsence === true) return false;
+  if (!STRUCTURED_ORIGIN_CLAIM_TYPES.has(String(body.originClaimType || ''))) return false;
+  const countries = Array.isArray(body.originCountries)
+    ? body.originCountries.filter((c) => typeof c === 'string' && c.trim().length > 0)
+    : [];
+  const primary = typeof body.originCountry === 'string' ? body.originCountry.trim() : '';
+  if (!primary && countries.length === 0) return false;
+  if (nonEmptyString(body.statement)) return false;
+  if (nonEmptyString(body.ingredientsText)) return false;
+  if (nonEmptyString(body.observedWording)) return false;
+  if (nonEmptyString(body.ingredientSubject)) return false;
+  if (typeof body.originPercentage === 'number') return false;
+  if (nonEmptyString(body.originPercentageQualifier)) return false;
+  // percentageNotStated may be true or omitted (treated as not stated when no %).
+  return true;
+}
 
 export function rejectEvidenceAuthorityActionIfPolicyActive(params: {
   action: string;
   adminHeader?: string | string[];
   founderAdminToken?: string;
-  /** When action === 'submit', true if any fact uses a photo / manual_text / non-attestation source. */
+  /** When action === 'submit', true if any fact uses a photo / free-text / non-attestation / non-structured-origins source. */
   submitUsesProhibitedSource?: boolean;
+  /** Raw POST body — used to narrow finalize-manual-text to structured Origins. */
+  body?: Record<string, unknown>;
 }): { ok: true } | { ok: false; status: number; error: string; policyVersion: string } {
   if (
     founderAdminAuthorizesMvpPolicyBypass(params.adminHeader, params.founderAdminToken)
@@ -105,6 +141,18 @@ export function rejectEvidenceAuthorityActionIfPolicyActive(params: {
     };
   }
 
+  if (params.action === 'finalize-manual-text') {
+    if (params.body && isStructuredOriginsManualTextBody(params.body)) {
+      return { ok: true };
+    }
+    return {
+      ok: false,
+      status: 403,
+      error: 'mvp_preselected_only_evidence_action_forbidden',
+      policyVersion: MVP_CONTRIBUTION_INPUT_POLICY_VERSION,
+    };
+  }
+
   if (params.action === 'submit' && params.submitUsesProhibitedSource === true) {
     return {
       ok: false,
@@ -114,8 +162,12 @@ export function rejectEvidenceAuthorityActionIfPolicyActive(params: {
     };
   }
 
-  if (params.action && !MVP_PERMITTED_EA_ACTIONS.has(params.action) && params.action !== 'withdraw' && params.action !== 'suppress') {
-    // Unknown write-like actions fail closed under MVP.
+  if (
+    params.action &&
+    !MVP_PERMITTED_EA_ACTIONS.has(params.action) &&
+    params.action !== 'withdraw' &&
+    params.action !== 'suppress'
+  ) {
     if (params.action !== '') {
       return {
         ok: false,
@@ -129,9 +181,34 @@ export function rejectEvidenceAuthorityActionIfPolicyActive(params: {
   return { ok: true };
 }
 
+function factIsStructuredOriginsOnly(fact: Record<string, unknown>): boolean {
+  if (fact.domain !== 'origins') return false;
+  if (fact.packetAbsence === true) return false;
+  if (nonEmptyString(fact.exactWording)) return false;
+  if (nonEmptyString(fact.observedWording)) return false;
+  if (nonEmptyString(fact.claimValue) === false && !fact.originStructured) {
+    // claimValue often carries country; originStructured is preferred.
+  }
+  const structured = fact.originStructured;
+  if (!structured || typeof structured !== 'object') return false;
+  const row = structured as Record<string, unknown>;
+  if (!STRUCTURED_ORIGIN_CLAIM_TYPES.has(String(row.claimType || ''))) return false;
+  const country =
+    (typeof row.primaryCountry === 'string' && row.primaryCountry.trim()) ||
+    (Array.isArray(row.countries) &&
+      row.countries.find((c) => typeof c === 'string' && c.trim().length > 0));
+  if (!country) return false;
+  if (typeof row.ingredientOriginPercentage === 'number') return false;
+  if (nonEmptyString(row.percentageQualifier)) return false;
+  if (nonEmptyString(row.ingredientSubject)) return false;
+  return true;
+}
+
 /**
- * Submit is allowed only for packet-absence attestation facts (FM-03R) or
- * closure-only ceasedSubjectKeys without source bytes / image assets.
+ * Submit is allowed for:
+ * - packet-absence attestation facts (FM-03R)
+ * - structured Origins facts (claim type + country, no free text)
+ * - closure-only ceasedSubjectKeys without source bytes
  */
 export function submitPayloadUsesProhibitedMvpSource(body: {
   sourceBase64?: unknown;
@@ -143,12 +220,11 @@ export function submitPayloadUsesProhibitedMvpSource(body: {
     if (!raw || typeof raw !== 'object') return true;
     const fact = raw as Record<string, unknown>;
     if (fact.packetAbsence === true) {
-      // Attestation path: must not also carry arbitrary wording as evidence.
       if (typeof fact.exactWording === 'string' && fact.exactWording.trim().length > 0) return true;
       if (typeof fact.observedWording === 'string' && fact.observedWording.trim().length > 0) return true;
       continue;
     }
-    // Any non-absence fact is free-form / photo / structured-with-manual-text under current contracts.
+    if (factIsStructuredOriginsOnly(fact)) continue;
     return true;
   }
   return false;

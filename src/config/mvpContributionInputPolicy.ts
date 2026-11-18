@@ -39,11 +39,15 @@ export type MvpConsumerContributionInputClass =
 
 /**
  * Classes the founder has authorised for MVP consumer submission when their
- * existing eligibility / gates are satisfied. Not every class is wired yet.
+ * existing eligibility / gates are satisfied.
+ * Founder P0 2026-11-18: structured Origins (claim type + governed country)
+ * is permitted; free text / photo / typed percentage remain prohibited.
  */
 export const MVP_PERMITTED_CONSUMER_INPUT_CLASSES: readonly MvpConsumerContributionInputClass[] = [
   'packet_absence_user_attestation',
   'community_agreement_agree',
+  'governed_country_choice',
+  'governed_origin_claim_type',
 ] as const;
 
 export const MVP_PROHIBITED_CONSUMER_INPUT_CLASSES: readonly MvpConsumerContributionInputClass[] = [
@@ -61,13 +65,11 @@ export const MVP_PROHIBITED_CONSUMER_INPUT_CLASSES: readonly MvpConsumerContribu
 ] as const;
 
 /**
- * Deferred: governed catalogue selections that exist as concepts but have no
- * founder-approved consumer-only submission path under preselected-only (no free text,
- * no photo). Leave those contribution categories unavailable until approved.
+ * Deferred: governed catalogue selections without a founder-approved consumer
+ * submission path under preselected-only (certifications / packet claims options).
+ * Country + origin claim type were restored for structured Origins (P0 2026-11-18).
  */
 export const MVP_DEFERRED_GOVERNED_CHOICE_CLASSES: readonly MvpConsumerContributionInputClass[] = [
-  'governed_country_choice',
-  'governed_origin_claim_type',
   'governed_certification_id',
   'governed_packet_claim_option',
 ] as const;

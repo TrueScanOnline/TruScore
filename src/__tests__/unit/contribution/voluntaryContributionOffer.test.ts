@@ -111,11 +111,15 @@ describe('voluntary contribution offer', () => {
     else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = prevAuth;
   });
 
-  it('returns no free-form rows under MVP preselected-only default-deny', () => {
+  it('keeps structured Origins rows and hides free-form rows under MVP preselected-only', () => {
     process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
-    expect(voluntaryContributionOffer(product(), open)).toEqual([]);
+    const labels = voluntaryContributionOffer(product(), open).map((row) => row.label);
+    expect(labels).toContain('Add product origins');
+    expect(labels).toContain('Change product origins');
+    expect(labels).not.toContain('Change nutrition');
+    expect(labels).not.toContain('Add packet information');
   });
 
   it('lists Change and the independent origin and packet Add rows when every pillar is Rated', () => {

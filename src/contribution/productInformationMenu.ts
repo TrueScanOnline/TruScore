@@ -5,7 +5,10 @@
  * This module does not score, publish, or admit.
  */
 
-import { isGuidedContributionSubmitEnabled } from '../config/mvpFeatureGates';
+import {
+  isGuidedContributionSubmitEnabled,
+  isStructuredOriginsContributionEnabled,
+} from '../config/mvpFeatureGates';
 import type { ContributionOpportunity } from '../lib/rateability/types';
 import type { Product } from '../types/product';
 import {
@@ -84,8 +87,10 @@ export function productInformationMenu(
   product: Product | null | undefined,
   options?: { publicationSettled?: boolean }
 ): ProductInformationAction[] {
-  // MVP: no submission menu when guided contribution is not entitled.
-  if (!isGuidedContributionSubmitEnabled()) return [];
+  const freeForm = isGuidedContributionSubmitEnabled();
+  const structuredOrigins = isStructuredOriginsContributionEnabled();
+  // MVP: free-form menu requires guided entitlement; structured Origins may still appear.
+  if (!freeForm && !structuredOrigins) return [];
   // Same fail-closed gate as voluntaryContributionOffer. One Checking or missing pillar supplies nothing.
   if (options?.publicationSettled !== true) return [];
   const publication = product?._publication;
@@ -113,7 +118,7 @@ export function productInformationMenu(
   const transparencyOk = terminal(publication.transparency.publicationStatus);
   const byKey = new Map<string, ProductInformationAction>();
 
-  if (bodyOk && actions.addNutrition && live(publication.body.s26?.contributionOpportunity)) {
+  if (freeForm && bodyOk && actions.addNutrition && live(publication.body.s26?.contributionOpportunity)) {
     byKey.set('add-nutrition', {
       key: 'add-nutrition',
       category: 'nutrition',
@@ -136,7 +141,7 @@ export function productInformationMenu(
     transparencyOk &&
     live(publication.body.s26?.contributionOpportunity) &&
     bodyDataLimitationActions(product as Product).some((action) => action.destination === 'ingredients');
-  if (ingredientsFromTransparency || ingredientsFromBody) {
+  if (freeForm && (ingredientsFromTransparency || ingredientsFromBody)) {
     byKey.set('add-ingredients', {
       key: 'add-ingredients',
       category: 'ingredients',
@@ -149,6 +154,7 @@ export function productInformationMenu(
   }
 
   if (
+    structuredOrigins &&
     transparencyOk &&
     (actions.originsAction === 'add' || actions.originsAction === 'complete') &&
     live(publication.transparency.s26?.contributionOpportunity, 'origins')
@@ -160,11 +166,12 @@ export function productInformationMenu(
       label: ADD_PRODUCT_ORIGINS,
       destination: 'origins',
       journey: 'add',
-      formFirst: false,
+      formFirst: true,
     });
   }
 
   if (
+    freeForm &&
     claimsOk &&
     actions.packetInformationAction === 'add' &&
     live(publication.claims.s26?.contributionOpportunity, 'packet_claims') &&

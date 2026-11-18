@@ -37,7 +37,15 @@ import { acknowledgedUnitRevisions, listSubmissionResumeAttention, retryParkedEv
 import { acceptLocalCapture, evidenceImageStatus, readableEvidenceFileUri, resumeEvidenceImages, retryParkedEvidenceImage } from '../evidenceImage/pipeline';
 import { visibleEvidenceImages } from '../evidenceImage/projection';
 import { beginModalTrace, finishModalTrace } from '../evidenceAuthority/contributionTrace';
-import { isGuidedContributionSubmitEnabled } from '../config/mvpFeatureGates';
+import {
+  isGuidedContributionSubmitEnabled,
+  isStructuredOriginsContributionEnabled,
+} from '../config/mvpFeatureGates';
+import {
+  isConsumerFreeTextEvidenceContributionAllowed,
+  isConsumerPhotoEvidenceContributionAllowed,
+  isMvpPreselectedOnlyConsumerPolicyActive,
+} from '../config/mvpContributionInputPolicy';
 import {
   NUTRITION_FIELDS,
   type NutritionAttribute,
@@ -290,12 +298,30 @@ export default function PacketContributionModal({
 }) {
   const { darkMode } = useTheme();
   const insets = useSafeAreaInsets();
-  // MVP preselected-only: free-form guided modal must not remain reachable.
+  const structuredOriginsOnly =
+    isStructuredOriginsContributionEnabled() &&
+    !isGuidedContributionSubmitEnabled() &&
+    entryContext === 'origins';
+  const photosAllowed = isConsumerPhotoEvidenceContributionAllowed();
+  const freeTextAllowed = isConsumerFreeTextEvidenceContributionAllowed();
+  // MVP: free-form modal stays closed; structured Origins-only may remain open.
   useEffect(() => {
-    if (visible && !isGuidedContributionSubmitEnabled()) {
-      onClose();
+    if (!visible) return;
+    if (isGuidedContributionSubmitEnabled()) return;
+    if (structuredOriginsOnly) return;
+    onClose();
+  }, [visible, onClose, structuredOriginsOnly]);
+  // Structured Origins / photo-free MVP always starts on the form (never Camera / capture).
+  useEffect(() => {
+    if (!visible) return;
+    if (
+      structuredOriginsOnly ||
+      !photosAllowed ||
+      (isMvpPreselectedOnlyConsumerPolicyActive() && entryContext === 'origins')
+    ) {
+      setPhase('entry');
     }
-  }, [visible, onClose]);
+  }, [visible, structuredOriginsOnly, entryContext, photosAllowed]);
   const [session, setSession] = useState<PacketContributionSession | null>(null);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [surfaceJourneyId, setSurfaceJourneyId] = useState<string | null>(null);
@@ -608,6 +634,10 @@ export default function PacketContributionModal({
 
   const captureCamera = async () => {
     if (!session) return;
+    if (!isConsumerPhotoEvidenceContributionAllowed()) {
+      setPermissionNotice('Photo capture is not available for MVP contribution.');
+      return;
+    }
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setPermissionNotice('Camera access is off. You can type the wording from the pack, or allow camera access in your phone settings.');
@@ -627,6 +657,10 @@ export default function PacketContributionModal({
 
   const captureGallery = async () => {
     if (!session) return;
+    if (!isConsumerPhotoEvidenceContributionAllowed()) {
+      setPermissionNotice('Photo library is not available for MVP contribution.');
+      return;
+    }
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setPermissionNotice('Photo library access is off. You can type the wording from the pack, or allow photo access in your phone settings.');
@@ -960,11 +994,27 @@ export default function PacketContributionModal({
       for (let index = 0; index < decision.origins.length; index += 1) {
         const row = decision.origins[index];
         const places = governedOriginCountryNames(row.place);
-        const wording = textField(row.wording).trim();
+        // MVP structured Origins: no free-text wording / typed percentage / ingredient name.
+        const mvpStructuredOrigins =
+          isMvpPreselectedOnlyConsumerPolicyActive() || structuredOriginsOnly;
+        const wording = mvpStructuredOrigins ? '' : textField(row.wording).trim();
         if (places.length === 0) continue;
-        const percentageText = textField(row.percentage);
+        if (
+          mvpStructuredOrigins &&
+          (!row.claimType ||
+            row.claimType === 'ingredient_origin' ||
+            row.claimType === 'other')
+        ) {
+          setPartialNotice('Choose a product origin statement and country.');
+          return;
+        }
+        const percentageText = mvpStructuredOrigins ? '' : textField(row.percentage);
         const percentage = Number(percentageText);
-        const statedPercentage = !row.percentageNotStated && Number.isFinite(percentage) && percentageText.trim();
+        const statedPercentage =
+          !mvpStructuredOrigins &&
+          !row.percentageNotStated &&
+          Number.isFinite(percentage) &&
+          percentageText.trim();
         const qualifications = capturedOriginQualifications({
           local: row.local === true,
           imported: row.imported === true,
@@ -977,12 +1027,17 @@ export default function PacketContributionModal({
           originClaimType: row.claimType,
           originCountry: places[0],
           originCountries: places.length > 1 ? places : undefined,
-          ingredientSubject: row.claimType === 'ingredient_origin' ? row.ingredient.trim() : undefined,
+          ingredientSubject:
+            !mvpStructuredOrigins && row.claimType === 'ingredient_origin'
+              ? row.ingredient.trim()
+              : undefined,
           originPercentage: statedPercentage ? percentage : undefined,
           originPercentageQualifier: statedPercentage ? row.qualifier : undefined,
           originQualification: qualifications.originQualification,
           originQualifications: qualifications.originQualifications,
-          percentageNotStated: row.percentageNotStated === true && !statedPercentage,
+          percentageNotStated: mvpStructuredOrigins
+            ? true
+            : row.percentageNotStated === true && !statedPercentage,
           support: supportFor('origins'),
         });
         created.push(unit.unitId);
@@ -1244,7 +1299,7 @@ export default function PacketContributionModal({
             <Text style={{ color: ink, fontWeight: '700' }}>Close</Text>
           </TouchableOpacity>
         </View>
-        {phase === 'capture' ? (
+        {phase === 'capture' && photosAllowed ? (
           <View style={phaseCard}>
             <Text style={[styles.body, { color: ink }]}>{journey.instruction}</Text>
             {entryIntent === 'packet_absence' ? (
@@ -1571,7 +1626,7 @@ export default function PacketContributionModal({
                         </TouchableOpacity>
                       );
                     })}
-                    {row.claimType === 'ingredient_origin' ? (
+                    {freeTextAllowed && row.claimType === 'ingredient_origin' ? (
                       <View>
                         <Text style={{ color: ink }}>Ingredient named on the pack</Text>
                         <TextInput
@@ -1650,6 +1705,12 @@ export default function PacketContributionModal({
                       <Text style={{ color: action }}>Add another country</Text>
                     </TouchableOpacity>
                     <Text style={[styles.header, { color: ink, fontSize: 18 }]}>Percentage of ingredients</Text>
+                    {!freeTextAllowed ? (
+                      <Text style={{ color: muted, marginBottom: 8 }}>
+                        Percentage is recorded as not stated for MVP (no free-form percentage entry).
+                      </Text>
+                    ) : (
+                      <>
                     <TouchableOpacity
                       onPress={() =>
                         setOrigins((rows) =>
@@ -1730,6 +1791,8 @@ export default function PacketContributionModal({
                         </View>
                       </View>
                     )}
+                      </>
+                    )}
                     <Text style={[styles.header, { color: ink, fontSize: 18 }]}>Ingredient origin</Text>
                     <TouchableOpacity
                       onPress={() =>
@@ -1778,6 +1841,8 @@ export default function PacketContributionModal({
                       <Text style={[styles.header, { color: ink, fontSize: 16 }]}>Your product statement</Text>
                       <Text style={[styles.originSentence, { color: ink }]}>{quotedOriginEntry(entrySentence)}</Text>
                     </View>
+                    {freeTextAllowed ? (
+                      <>
                     <Text style={{ color: ink }}>What else does the pack say?</Text>
                     <TextInput
                       value={row.wording}
@@ -1788,6 +1853,8 @@ export default function PacketContributionModal({
                       placeholder="Optional wording from the pack"
                       style={[styles.input, { color: ink, borderColor: line, backgroundColor: fieldBg }]}
                     />
+                      </>
+                    ) : null}
                     {row.claimType && row.place.trim() ? (
                     <View style={styles.row}>
                       {surfaceMode === 'change' && row.intent === 'edited' ? (
@@ -1837,6 +1904,7 @@ export default function PacketContributionModal({
                     </Text>
                   </View>
                 ) : null}
+                {photosAllowed ? (
                 <View style={styles.row}>
                   <TouchableOpacity onPress={captureCamera} style={filledButton} accessibilityRole="button" accessibilityLabel="Camera">
                     <Text style={styles.buttonText}>Camera</Text>
@@ -1845,6 +1913,7 @@ export default function PacketContributionModal({
                     <Text style={styles.buttonText}>Gallery</Text>
                   </TouchableOpacity>
                 </View>
+                ) : null}
                 {permissionNotice ? <Text style={{ color: ink }}>{permissionNotice}</Text> : null}
                 {targeted.filter((asset) => asset.imagePhase !== 'parked_after_interrupted_resume' && evidenceImageStatus(asset)).map((asset) => (
                   <Text key={asset.assetId} style={{ color: ink }}>{evidenceImageStatus(asset)}</Text>

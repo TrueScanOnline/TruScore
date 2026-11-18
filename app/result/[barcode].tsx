@@ -200,6 +200,7 @@ import { voluntaryContributionOffer } from '../../src/contribution/voluntaryCont
 import {
   isClaimsAbsenceAttestationContributionEnabled,
   isGuidedContributionSubmitEnabled,
+  isStructuredOriginsContributionEnabled,
 } from '../../src/config/mvpFeatureGates';
 import {
   isConsumerManualProductContributionAllowed,
@@ -1759,13 +1760,18 @@ function ResultScreenContent() {
     formFirst = false,
     entryIntent: 'default' | 'packet_absence' = 'default'
   ) => {
-    // MVP preselected-only: free-form guided (photos / typed evidence) stays closed.
+    // MVP: free-form guided stays closed. Structured Origins may open form-first.
     // FM-03R uses submitClaimsAbsenceAttestation — never this modal.
-    if (!isGuidedContributionSubmitEnabled()) return;
+    const freeForm = isGuidedContributionSubmitEnabled();
+    const structuredOrigins =
+      entry === 'origins' && isStructuredOriginsContributionEnabled();
+    if (!freeForm && !structuredOrigins) return;
     if (entryIntent === 'packet_absence') return;
+    if (!freeForm && entry !== 'origins') return;
     setContributionEntry(entry);
     setContributionJourney(journey);
-    setContributionFormFirst(formFirst);
+    // Structured Origins is always form-first (no camera phase).
+    setContributionFormFirst(structuredOrigins && !freeForm ? true : formFirst);
     setContributionEntryIntent(entryIntent);
     setContributionChoice(null);
     setPacketContributionVisible(true);
@@ -2285,6 +2291,21 @@ function ResultScreenContent() {
         setClaimsAbsenceAttestationError(null);
         setScoreHighlightsRequest(null);
         setContributionChoice(null);
+        showContributionNotice(CONTRIBUTION_NOTICE_ADDED);
+        const variant = celebrationVariantForAdmission({
+          complete: true,
+          journey: 'add',
+        });
+        if (variant) {
+          presentContributionCelebration(
+            admissionSubmissionKey({
+              barcode: getPrimaryBarcode(liveBarcode),
+              snapshotGeneratedAt: result.snapshot.generatedAt,
+              journey: 'add',
+            }),
+            variant
+          );
+        }
         return;
       }
       setClaimsAbsenceAttestationState('failed');
@@ -3692,7 +3713,7 @@ function ResultScreenContent() {
                       Add a claim or certification
                     </Text>
                     <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
-                      Camera, gallery, or type what you see on the pack.
+                      Add a claim or certification from the pack using the guided journey.
                     </Text>
                   </TouchableOpacity>
                 ) : null}

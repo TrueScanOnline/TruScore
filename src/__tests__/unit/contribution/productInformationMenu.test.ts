@@ -124,11 +124,14 @@ describe('product information menu', () => {
     else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = prevAuth;
   });
 
-  it('returns no free-form rows under MVP preselected-only default-deny', () => {
+  it('keeps structured Origins and hides free-form rows under MVP preselected-only', () => {
     process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
-    expect(productInformationMenu(product(), open)).toEqual([]);
+    const labels = productInformationMenu(product(), open).map((row) => row.label);
+    expect(labels.some((label) => /origins/i.test(label))).toBe(true);
+    expect(labels).not.toContain('Change nutrition');
+    expect(labels).not.toContain('Add packet information');
   });
 
   it('keeps voluntary paths on a fully assessed Rated product, including a published zero', () => {

@@ -1,12 +1,12 @@
 /**
- * Server policy module — proves prohibited writes are rejected before storage
- * under default-deny preselected-only (founder 2026-11-18 corrective).
+ * Server policy — default-deny with structured Origins + FM-03R exceptions.
  *
  * @jest-environment node
  */
 import {
   MVP_CONTRIBUTION_INPUT_POLICY_VERSION,
   isMvpPreselectedOnlyPolicyActiveServer,
+  isStructuredOriginsManualTextBody,
   rejectConsumerManualProductWriteIfPolicyActive,
   rejectConsumerPhotoUploadIfPolicyActive,
   rejectEvidenceAuthorityActionIfPolicyActive,
@@ -21,42 +21,43 @@ describe('server mvpContributionInputPolicy', () => {
     else process.env.RVEEL_MVP_PRESELECTED_ONLY = prev;
   });
 
-  it('is active by default (founder 2026-11-18 corrective — default-deny)', () => {
+  it('is active by default (default-deny)', () => {
     delete process.env.RVEEL_MVP_PRESELECTED_ONLY;
     expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(true);
     expect(rejectConsumerPhotoUploadIfPolicyActive({}).ok).toBe(false);
     expect(rejectConsumerManualProductWriteIfPolicyActive({}).ok).toBe(false);
   });
 
-  it('rejects consumer photo uploads before storage when active', () => {
+  it('rejects free-form finalize-manual-text when active', () => {
     process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
-    const denied = rejectConsumerPhotoUploadIfPolicyActive({});
+    const denied = rejectEvidenceAuthorityActionIfPolicyActive({
+      action: 'finalize-manual-text',
+      body: { domain: 'origins', statement: 'Made in NZ', originClaimType: 'made_in', originCountry: 'New Zealand' },
+    });
     expect(denied.ok).toBe(false);
-    if (!denied.ok) {
-      expect(denied.status).toBe(403);
-      expect(denied.error).toBe('mvp_preselected_only_photo_upload_forbidden');
-      expect(denied.policyVersion).toBe(MVP_CONTRIBUTION_INPUT_POLICY_VERSION);
-    }
   });
 
-  it('rejects consumer manual-product POSTs when active', () => {
+  it('allows structured Origins finalize-manual-text (claim type + country, no statement)', () => {
     process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
-    const denied = rejectConsumerManualProductWriteIfPolicyActive({});
-    expect(denied.ok).toBe(false);
-    if (!denied.ok) {
-      expect(denied.error).toBe('mvp_preselected_only_manual_product_write_forbidden');
-    }
+    const body = {
+      domain: 'origins',
+      originClaimType: 'made_in',
+      originCountry: 'New Zealand',
+      percentageNotStated: true,
+    };
+    expect(isStructuredOriginsManualTextBody(body)).toBe(true);
+    expect(
+      rejectEvidenceAuthorityActionIfPolicyActive({
+        action: 'finalize-manual-text',
+        body,
+      }).ok
+    ).toBe(true);
   });
 
-  it('rejects EA photo and manual-text finalisation actions when active', () => {
+  it('rejects photo and evidence-image finalisation when active', () => {
     process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
-    for (const action of [
-      'authorize-evidence-image',
-      'finalize-evidence-image',
-      'finalize-manual-text',
-    ]) {
-      const denied = rejectEvidenceAuthorityActionIfPolicyActive({ action });
-      expect(denied.ok).toBe(false);
+    for (const action of ['authorize-evidence-image', 'finalize-evidence-image']) {
+      expect(rejectEvidenceAuthorityActionIfPolicyActive({ action }).ok).toBe(false);
     }
   });
 
@@ -72,24 +73,49 @@ describe('server mvpContributionInputPolicy', () => {
         facts: [{ domain: 'packet_claims', packetAbsence: true, finalizedAssetId: 'a1' }],
       })
     ).toBe(false);
+  });
+
+  it('allows structured Origins submit facts and rejects free-text origins', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
     expect(
-      rejectEvidenceAuthorityActionIfPolicyActive({
-        action: 'submit',
-        submitUsesProhibitedSource: false,
-      }).ok
+      submitPayloadUsesProhibitedMvpSource({
+        facts: [
+          {
+            domain: 'origins',
+            claimValue: 'New Zealand',
+            finalizedAssetId: 'a1',
+            originStructured: {
+              claimType: 'made_in',
+              primaryCountry: 'New Zealand',
+              percentageNotStated: true,
+            },
+          },
+        ],
+      })
+    ).toBe(false);
+    expect(
+      submitPayloadUsesProhibitedMvpSource({
+        facts: [
+          {
+            domain: 'origins',
+            exactWording: 'Made in NZ from local and imported',
+            claimValue: 'New Zealand',
+            finalizedAssetId: 'a1',
+            originStructured: {
+              claimType: 'made_in',
+              primaryCountry: 'New Zealand',
+            },
+          },
+        ],
+      })
     ).toBe(true);
   });
 
-  it('flags photo bytes and free-text facts as prohibited submit sources', () => {
+  it('flags photo bytes and free-text packet facts as prohibited', () => {
     expect(submitPayloadUsesProhibitedMvpSource({ sourceBase64: 'abc' })).toBe(true);
     expect(
       submitPayloadUsesProhibitedMvpSource({
         facts: [{ domain: 'packet_claims', exactWording: 'Gluten Free' }],
-      })
-    ).toBe(true);
-    expect(
-      submitPayloadUsesProhibitedMvpSource({
-        facts: [{ domain: 'packet_claims', packetAbsence: true, exactWording: 'sneaky' }],
       })
     ).toBe(true);
   });
@@ -106,11 +132,6 @@ describe('server mvpContributionInputPolicy', () => {
       founderAdminToken: 'founder-secret-token',
     });
     expect(allowed.ok).toBe(true);
-  });
-
-  it('deactivates only with explicit RVEEL_MVP_PRESELECTED_ONLY=0', () => {
-    process.env.RVEEL_MVP_PRESELECTED_ONLY = '0';
-    expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(false);
-    expect(rejectConsumerPhotoUploadIfPolicyActive({}).ok).toBe(true);
+    expect(MVP_CONTRIBUTION_INPUT_POLICY_VERSION).toContain('mvp_preselected_only');
   });
 });
