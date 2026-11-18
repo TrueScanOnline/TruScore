@@ -1,6 +1,7 @@
 /**
  * Emerald Community Agreement control. Display-only; not Confidence.
- * WP09-R1: entire surface requires settlement + Change eligibility.
+ * WP09-R1: Agree requires settlement latch only.
+ * Correct opens structured Change when eligible; otherwise an honest non-submit explanation.
  * W5-UI-11: no Community-added card copy.
  * W5-UI-13: minimal integrated confirmation bar (question + thumbs ± count).
  */
@@ -35,11 +36,18 @@ type Props = {
   group: CommunityAgreementGroup;
   product: Product | null | undefined;
   snapshot: SharedEvidenceSnapshot | null | undefined;
-  /** Settlement + Change gate for the whole component (Agree and Correct). */
+  /** Settlement latch for Agree visibility. */
   surfaceEnabled: boolean;
-  /** Re-check the gate immediately before Agree / Correct. */
+  /**
+   * When true, thumbs-down opens the structured Change journey.
+   * When false, thumbs-down stays visible and calls onCorrectUnavailable (no evidence mutation).
+   */
+  correctEnabled?: boolean;
+  /** Re-check the Agree gate immediately before Agree / Correct. */
   onRevalidateSurface: () => boolean;
   onCorrect: () => void;
+  /** Honest non-submitting explanation when structured Correct is unavailable. */
+  onCorrectUnavailable?: () => void;
   /**
    * Presentation-only hook after a successful server ack.
    * W5-CD-01: parent may show a compact acknowledgement. Never decides agreement truth.
@@ -81,8 +89,10 @@ export default function CommunityAgreementBar({
   product,
   snapshot,
   surfaceEnabled,
+  correctEnabled = true,
   onRevalidateSurface,
   onCorrect,
+  onCorrectUnavailable,
   onAgreementRecorded,
 }: Props) {
   const featureEnabled = isCommunityAgreementsEnabled();
@@ -273,11 +283,19 @@ export default function CommunityAgreementBar({
           <Pressable
             onPress={() => {
               if (onRevalidateSurface() !== true) return;
-              onCorrect();
+              if (correctEnabled) {
+                onCorrect();
+                return;
+              }
+              onCorrectUnavailable?.();
             }}
             accessibilityRole="button"
             accessibilityLabel="Correct information"
-            accessibilityHint="Opens the existing information correction process."
+            accessibilityHint={
+              correctEnabled
+                ? 'Opens the existing information correction process.'
+                : 'Explains that a structured correction is not available yet.'
+            }
             hitSlop={4}
             style={[
               styles.correctHit,

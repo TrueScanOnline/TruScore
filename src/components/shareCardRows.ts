@@ -12,7 +12,15 @@ import type { Product } from '../types/product';
 import { countryFlagEmoji } from '../utils/countryFlagEmoji';
 import { getNutrientValue100g, resolveKcalPer100g } from '../utils/nutritionPer100g';
 import { getNutritionShareBurnData } from '../utils/nutritionShareCopy';
+import { displayCertificationName } from '../certifications/resolveCertification';
+import { PACKET_ABSENCE_PRODUCT_STATE } from '../contribution/resultContributionActions';
+import {
+  PACKET_CLAIMS_EMPTY_STATE,
+  packetClaimsRecognisedMarks,
+  packetLineWithdrawn,
+} from './packetClaimsCardCopy';
 import { PRODUCT_ORIGINS_EMPTY_STATE, productOriginsCardShowsEmptyState } from './productOriginsCardCopy';
+import { ordinaryLinesBesideRecognisedCertifications } from '../certifications/resolveCertification';
 
 export type ShareNutrientLevelLabel = 'Low' | 'Mid' | 'High';
 
@@ -155,6 +163,52 @@ export function originShareText(product: Product, country?: string): string {
       const pack = row.packWording ? `"${row.packWording}"` : '';
       return [head, ...row.support, pack].filter((line) => line.length > 0).join('\n');
     })
+    .filter((line) => line.length > 0)
+    .join('\n');
+}
+
+/**
+ * Packet Claims share rows — same governed projection as the Result card.
+ * Does not invent claims, certifications, or absence.
+ */
+export function packetClaimsShareRows(product: Product): ShareCardRow[] {
+  const withdrawnSubjectKeys = product.rveelWithdrawnPacketSubjectKeys;
+  const recognisedCertificationNames = (product.certifications || []).map((cert) =>
+    displayCertificationName(cert)
+  );
+  const visibleClaims = (product.rveelGovernedPacketClaims || [])
+    .filter(
+      (claim) =>
+        !packetLineWithdrawn('claim', claim.exactWording, withdrawnSubjectKeys) &&
+        ordinaryLinesBesideRecognisedCertifications([claim.exactWording], recognisedCertificationNames)
+          .length > 0
+    )
+    .map((claim) => claim.exactWording.trim())
+    .filter((text) => text.length > 0);
+  const visibleCertifications = ordinaryLinesBesideRecognisedCertifications(
+    product.rveelGovernedCertifications || [],
+    recognisedCertificationNames
+  ).filter((name) => !packetLineWithdrawn('certification', name, withdrawnSubjectKeys));
+  const recognisedMarks = packetClaimsRecognisedMarks({
+    marks: product.certifications || [],
+    labelHierarchy: product.labels_hierarchy,
+    governedCertificationNames: visibleCertifications,
+    withdrawnSubjectKeys,
+  }).map((cert) => displayCertificationName(cert));
+
+  const lines = [...new Set([...recognisedMarks, ...visibleCertifications, ...visibleClaims])];
+  if (product.rveelPacketAbsenceEstablished === true) {
+    return [{ kind: 'text', text: PACKET_ABSENCE_PRODUCT_STATE }];
+  }
+  if (lines.length === 0) {
+    return [{ kind: 'text', text: PACKET_CLAIMS_EMPTY_STATE }];
+  }
+  return lines.map((text) => ({ kind: 'text' as const, text }));
+}
+
+export function packetClaimsShareText(product: Product): string {
+  return packetClaimsShareRows(product)
+    .map((row) => (row.kind === 'text' ? row.text : ''))
     .filter((line) => line.length > 0)
     .join('\n');
 }

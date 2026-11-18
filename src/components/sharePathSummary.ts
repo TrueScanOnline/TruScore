@@ -5,7 +5,7 @@
  */
 
 import type { Product } from '../types/product';
-import { nutritionShareText, originShareText } from './shareCardRows';
+import { nutritionShareText, originShareText, packetClaimsShareText } from './shareCardRows';
 import type { AdditiveSharePayload } from '../features/sharing/additivesShareContent';
 import { additivesShareText } from '../features/sharing/additivesShareContent';
 
@@ -38,6 +38,7 @@ export function sharePathSummary(input: {
   }
   if (shareType === 'nutrition') return nutritionShareText(product);
   if (shareType === 'countryOfManufacture') return originShareText(product, input.country);
+  if (shareType === 'packetClaims') return packetClaimsShareText(product);
   if (shareType === 'ingredients') {
     const text = (product.ingredients_text || '').replace(/\s+/g, ' ').trim();
     return text || 'Ingredients for this product are not listed.';

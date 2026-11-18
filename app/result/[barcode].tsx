@@ -221,6 +221,11 @@ import {
   agreementSurfaceGate,
   type CommunityAgreementGroup,
 } from '../../src/communityAgreement';
+import {
+  CORRECT_STRUCTURED_UNAVAILABLE_ACK,
+  CORRECT_STRUCTURED_UNAVAILABLE_BODY,
+  CORRECT_STRUCTURED_UNAVAILABLE_TITLE,
+} from '../../src/communityAgreement/correctUnavailableCopy';
 import { calculateTrustScore } from '../../src/utils/trustScore';
 import { getManualProduct, isManualProduct, saveManualProduct } from '../../src/services/manualProductService';
 import { ManualProductData } from '../../src/types/manualProduct';
@@ -1813,7 +1818,7 @@ function ResultScreenContent() {
       settledBarcode: settledForBarcodeRef.current,
       currentBarcode: barcode,
     });
-    if (!gate.ok) return;
+    if (!gate.ok || !gate.destination) return;
     openContribution(gate.destination, 'change', true);
   };
 
@@ -1823,6 +1828,25 @@ function ResultScreenContent() {
       settledBarcode: settledForBarcodeRef.current,
       currentBarcode: typeof barcode === 'string' ? barcode : null,
     }).ok;
+
+  /** Correct (thumbs-down) opens structured Change only when that journey is eligible. */
+  const agreementCorrectEnabled = (group: CommunityAgreementGroup): boolean => {
+    const gate = agreementSurfaceGate(group, product, {
+      publicationSettled,
+      settledBarcode: settledForBarcodeRef.current,
+      currentBarcode: typeof barcode === 'string' ? barcode : null,
+    });
+    return gate.ok && gate.destination != null;
+  };
+
+  /** CF-01: keep thumbs-down visible; explain when no structured Correct destination exists. */
+  const explainAgreementCorrectUnavailable = () => {
+    Alert.alert(
+      CORRECT_STRUCTURED_UNAVAILABLE_TITLE,
+      CORRECT_STRUCTURED_UNAVAILABLE_BODY,
+      [{ text: CORRECT_STRUCTURED_UNAVAILABLE_ACK }]
+    );
+  };
 
   const showContributionNotice = (message: string) => {
     setContributionNotice(message);
@@ -2801,8 +2825,10 @@ function ResultScreenContent() {
                   product={product}
                   snapshot={agreementSnapshot}
                   surfaceEnabled={agreementSurfaceEnabled('nutrition')}
+                  correctEnabled={agreementCorrectEnabled('nutrition')}
                   onRevalidateSurface={() => revalidateAgreementSurface('nutrition')}
                   onCorrect={() => openAgreementChange('nutrition')}
+                  onCorrectUnavailable={explainAgreementCorrectUnavailable}
                   onAgreementRecorded={handleAgreementRecorded}
                 />
                 <ResultIngredientsSection
@@ -2839,8 +2865,10 @@ function ResultScreenContent() {
                       product={product}
                       snapshot={agreementSnapshot}
                       surfaceEnabled={agreementSurfaceEnabled('ingredients')}
+                      correctEnabled={agreementCorrectEnabled('ingredients')}
                       onRevalidateSurface={() => revalidateAgreementSurface('ingredients')}
                       onCorrect={() => openAgreementChange('ingredients')}
+                      onCorrectUnavailable={explainAgreementCorrectUnavailable}
                       onAgreementRecorded={handleAgreementRecorded}
                     />
                   }
@@ -3008,8 +3036,10 @@ function ResultScreenContent() {
             product={product}
             snapshot={agreementSnapshot}
             surfaceEnabled={agreementSurfaceEnabled('origins')}
+            correctEnabled={agreementCorrectEnabled('origins')}
             onRevalidateSurface={() => revalidateAgreementSurface('origins')}
             onCorrect={() => openAgreementChange('origins')}
+            onCorrectUnavailable={explainAgreementCorrectUnavailable}
             onAgreementRecorded={handleAgreementRecorded}
           />
           </View>
@@ -3052,6 +3082,15 @@ function ResultScreenContent() {
                   <Ionicons name="create-outline" size={20} color={emerald.action} />
                 </TouchableOpacity>
               ) : null}
+              <TouchableOpacity
+                onPress={() => handleShare('packetClaims')}
+                style={styles.shareButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel="Share packet claims"
+              >
+                <Ionicons name="share-outline" size={20} color={emerald.action} />
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setPacketClaimsExplainerVisible(true)}
                 accessibilityRole="button"
@@ -3201,8 +3240,10 @@ function ResultScreenContent() {
             product={product}
             snapshot={agreementSnapshot}
             surfaceEnabled={agreementSurfaceEnabled('packet_information')}
+            correctEnabled={agreementCorrectEnabled('packet_information')}
             onRevalidateSurface={() => revalidateAgreementSurface('packet_information')}
             onCorrect={() => openAgreementChange('packet_information')}
+            onCorrectUnavailable={explainAgreementCorrectUnavailable}
             onAgreementRecorded={handleAgreementRecorded}
           />
           </View>

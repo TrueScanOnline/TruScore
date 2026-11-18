@@ -88,4 +88,6 @@ Barcode `9300617064879` (Cadbury UAT fixture):
 | Server Claims-NR | Deferred AMBER | never | Still deferred | Never implemented |
 | Add/Change/Remove Origins | Founder UX | pre-containment | Origins Add/Change under structured gate | Restored |
 
-**STOP for independent acceptance** when Android visual completes the Origins + FM-03R-NR journeys on device. Do not treat API-only Origins admit as full consumer UX acceptance without Metro/device confirmation.
+See also: `docs/uat/P0_EXHAUSTIVE_REGRESSION_MATRIX_20261118.md` (Antarctica withdraw, WP09 Agree≠Change, transmit reconcile).
+
+**STOP for independent acceptance** — not complete while Packet Claims Agree post-fix device re-verify, FM-03R Claims-NR UI, and iOS remain outstanding. Do not treat API-only Origins admit as full consumer UX acceptance without Metro/device confirmation.

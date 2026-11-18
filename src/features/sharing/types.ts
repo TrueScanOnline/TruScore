@@ -7,6 +7,8 @@ export type ShareableItem =
   | 'truScore'
   | 'recall'
   | 'countryOfManufacture'
+  /** Governed Packet Claims / certifications already shown on Result. */
+  | 'packetClaims'
   | 'negativeTruScore'
   | 'productInfo'
   | 'insights'

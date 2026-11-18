@@ -34,6 +34,8 @@ yarn-error.*
 # local env files
 .env*.local
 .env
+.env.vercel*
+backend/vercel/.env.vercel*
 
 # API keys and secrets (never commit)
 Database files/API keys/

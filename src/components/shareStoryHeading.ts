@@ -9,6 +9,8 @@ export function shareStoryHeading(shareType: string): string {
       return 'Ingredients';
     case 'countryOfManufacture':
       return 'Product origins';
+    case 'packetClaims':
+      return 'Packet Claims';
     case 'allergens':
       return 'Allergens & additives';
     case 'ecoscore':

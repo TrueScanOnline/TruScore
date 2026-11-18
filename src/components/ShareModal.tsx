@@ -38,7 +38,12 @@ import { consumerPillarLabel } from '../lib/scoreHighlights';
 import { logger } from '../utils/logger';
 import { ShareProductStoryCard } from './ShareProductStoryCard';
 import { sharePathSummary } from './sharePathSummary';
-import { highlightShareRows, nutritionShareRows, originShareRows } from './shareCardRows';
+import {
+  highlightShareRows,
+  nutritionShareRows,
+  originShareRows,
+  packetClaimsShareRows,
+} from './shareCardRows';
 import { shareStoryHeading } from './shareStoryHeading';
 import { armShareImageGate, releaseShareImageGate, waitForShareImageGate, type ShareImageGate } from './shareImageCaptureGate';
 import type { AdditiveSharePayload } from '../features/sharing/additivesShareContent';
@@ -400,6 +405,7 @@ export default function ShareModal({
     if (shareType === 'highlights') return highlightShareRows(highlightEntries || [], !!darkMode);
     if (shareType === 'nutrition') return nutritionShareRows(product, !!darkMode);
     if (shareType === 'countryOfManufacture') return originShareRows(product, country);
+    if (shareType === 'packetClaims') return packetClaimsShareRows(product);
     // Additives use ShareProductStoryCard additiveShare composition — not text rows.
     return null;
   }, [shareType, product, country, darkMode, highlightEntries]);

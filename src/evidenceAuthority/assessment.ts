@@ -186,3 +186,11 @@ async function defaultFetchSnapshot(
     clearTimeout(timer);
   }
 }
+
+/** Authoritative GET snapshot for post-submit reconciliation (no local invent). */
+export async function fetchAuthoritativeSnapshot(
+  barcode: string,
+  timeoutMs = SNAPSHOT_FETCH_TIMEOUT_MS
+): Promise<SharedEvidenceSnapshot | null> {
+  return defaultFetchSnapshot(barcode, timeoutMs);
+}

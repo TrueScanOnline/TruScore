@@ -15,6 +15,7 @@ import {
 } from '../../../utils/shareScoreSemantics';
 import { consumerPillarLabel } from '../../../lib/scoreHighlights';
 import { buildAdditivesShareMessage } from '../additivesShareContent';
+import { packetClaimsShareText } from '../../../components/shareCardRows';
 
 const scoreName = productIdentity.publicScoreName;
 const appName = productIdentity.displayName;
@@ -48,6 +49,9 @@ export class ShareContentBuilder {
       
       case 'countryOfManufacture':
         return this.buildCountryContent(product, universalLink, productName, platform, options);
+
+      case 'packetClaims':
+        return this.buildPacketClaimsContent(product, universalLink, productName);
       
       case 'negativeTruScore':
         return this.buildNegativeTruScoreContent(
@@ -228,6 +232,25 @@ export class ShareContentBuilder {
       message,
       url: universalLink,
       hashtags: ['FoodRecall', 'ProductSafety', 'RveelScore', 'FoodSafetyAlert', 'RecallAlert'],
+    };
+  }
+
+  private static buildPacketClaimsContent(
+    product: ShareOptions['product'],
+    universalLink: string,
+    productName: string
+  ): ShareContent {
+    const body = packetClaimsShareText(product);
+    const title = `Packet Claims: ${productName}`;
+    const message =
+      `${title}\n\n` +
+      `${body}\n\n` +
+      `🔍 Tap to view full details in ${appName}`;
+    return {
+      title,
+      message,
+      url: universalLink,
+      hashtags: ['PacketClaims', 'RveelScore'],
     };
   }
 

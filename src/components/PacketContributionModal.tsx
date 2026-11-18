@@ -1127,14 +1127,20 @@ export default function PacketContributionModal({
           ...latest,
           units: latest.units.map((unit) => {
             if (!created.includes(unit.unitId)) return unit;
+            // MVP structured Origins must never cite a leftover photo — force manual-text.
+            const forceManualText =
+              unit.domain === 'origins' &&
+              (isMvpPreselectedOnlyConsumerPolicyActive() || structuredOriginsOnly);
             const support = reviewedUnitSupport({
               unitId: unit.unitId,
               packetAbsence: unit.packetAbsenceAffirmation === true,
-              photos: targeted.map((asset) => ({
-                assetId: asset.assetId,
-                imagePhase: asset.imagePhase,
-                remoteAssetId: asset.remoteAssetId,
-              })),
+              photos: forceManualText
+                ? []
+                : targeted.map((asset) => ({
+                    assetId: asset.assetId,
+                    imagePhase: asset.imagePhase,
+                    remoteAssetId: asset.remoteAssetId,
+                  })),
             });
             return {
               ...unit,

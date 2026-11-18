@@ -4,7 +4,7 @@ import { sha256Hex } from '../packetContribution/sha256';
 import { getSession } from '../packetContribution/sessionStore';
 import type { PacketContributionSession, PacketEvidenceUnit } from '../packetContribution/types';
 import { governedCertificationLabels } from '../contributions/certificationLane';
-import { expectedAuthorityEnv, rememberSnapshot } from './assessment';
+import { expectedAuthorityEnv, fetchAuthoritativeSnapshot, rememberSnapshot } from './assessment';
 import {
   beginRetryTrace,
   noteTransmitEnter,
@@ -638,6 +638,73 @@ export async function transmitSessionToAuthority(
   }
 }
 
+/**
+ * After an ambiguous client failure, check whether the authority already holds the
+ * attempted subjects as prevailing. Prevents "Couldn't submit" when admit succeeded
+ * but the submit response was lost / parsed as failure.
+ */
+function unitMatchesPrevailing(unit: PacketEvidenceUnit, snapshot: SharedEvidenceSnapshot): boolean {
+  if (unit.domain === 'origins' && unit.originClaimType && unit.originClaimType !== 'other') {
+    const subjectKey =
+      unit.originClaimType === 'ingredient_origin' && unit.ingredientSubject?.trim()
+        ? `origins|ingredient_origin:${unit.ingredientSubject.trim().toLowerCase()}`
+        : `origins|${unit.originClaimType}`;
+    const row = snapshot.prevailing.find((item) => item.subjectKey === subjectKey);
+    if (!row) return false;
+    const country = (unit.originCountry || '').trim();
+    if (!country) return true;
+    const structured = row.evidence.originStructured;
+    const primary =
+      (structured?.primaryCountry || '').trim() ||
+      (typeof row.evidence.claimValue === 'string' ? row.evidence.claimValue.trim() : '');
+    return primary === country;
+  }
+  if (unit.domain === 'packet_claims' && unit.packetAbsenceAffirmation === true) {
+    return snapshot.prevailing.some(
+      (item) => item.subjectKey === 'packet_claims|absence|scope:whole_packet'
+    );
+  }
+  if (unit.domain === 'packet_claims' && unit.statement.trim()) {
+    const wording = unit.statement.trim().toLowerCase();
+    return snapshot.prevailing.some((item) => {
+      if (!item.subjectKey.startsWith('packet_claims|')) return false;
+      const exact = (item.evidence.exactWording || item.evidence.claimValue || '').trim().toLowerCase();
+      return exact === wording;
+    });
+  }
+  return false;
+}
+
+async function reconcileFailedTransmit(
+  barcode: string,
+  sendable: PacketEvidenceUnit[],
+  unitRefs: UnitRef[],
+  item: OutboxItem,
+  items: OutboxItem[],
+  trace: ContributionTrace
+): Promise<AuthorityTransmitResult | null> {
+  if (sendable.length === 0) return null;
+  try {
+    const snapshot = await fetchAuthoritativeSnapshot(barcode);
+    if (!snapshot) return null;
+    if (!sendable.every((unit) => unitMatchesPrevailing(unit, snapshot))) return null;
+    trace.mark('snapshot_received', 'reconciled_admitted');
+    await rememberSnapshot(snapshot);
+    item.status = 'acknowledged';
+    item.unitRefs = unitRefs;
+    await writeOutbox(items);
+    notifyEvidenceAdmission(barcode, snapshot);
+    return {
+      admitted: true,
+      admittedUnitIds: sendable.map((unit) => unit.unitId),
+      pendingOutbox: false,
+      snapshot,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Removal of the last prevailing subject has no new fact. The closure still withdraws it. */
 export async function transmitPrevailingClosure(
   barcode: string,
@@ -753,14 +820,30 @@ async function transmitSession(
         related[0].support.sourceAssetId.startsWith('manual-text:');
       if (!manualOnly) {
         trace.mark('finalisation_end', 'failed');
-        return { ...none, pendingOutbox: true };
+        const reconciled = await reconcileFailedTransmit(
+          session.barcode,
+          sendable,
+          unitRefs,
+          item,
+          items,
+          trace
+        );
+        return reconciled ?? { ...none, pendingOutbox: true };
       }
       finalized.set(sourceId, await finalizeManualTextAsset(token, session, related[0], trace));
     }
     trace.mark('finalisation_end', 'ok');
     const facts = evidenceFactsForUnits(session, sendable, finalized);
     if (facts.length === 0 || facts.some((fact) => !fact.finalizedAssetId)) {
-      return { ...none, pendingOutbox: true };
+      const reconciled = await reconcileFailedTransmit(
+        session.barcode,
+        sendable,
+        unitRefs,
+        item,
+        items,
+        trace
+      );
+      return reconciled ?? { ...none, pendingOutbox: true };
     }
     trace.mark('submit_request_begin');
     const response = await postAuthority(token, {
@@ -774,7 +857,15 @@ async function transmitSession(
     }, trace, 'submit');
     if (!response.ok) {
       trace.mark('snapshot_received', 'http_error');
-      return { ...none, pendingOutbox: true };
+      const reconciled = await reconcileFailedTransmit(
+        session.barcode,
+        sendable,
+        unitRefs,
+        item,
+        items,
+        trace
+      );
+      return reconciled ?? { ...none, pendingOutbox: true };
     }
     const body = (await response.json()) as { outcome?: SubmissionOutcome };
     const snapshot = body.outcome?.snapshot ?? null;
@@ -803,11 +894,28 @@ async function transmitSession(
       item.status = 'refused';
       await writeOutbox(items);
     }
+    const reconciled = await reconcileFailedTransmit(
+      session.barcode,
+      sendable,
+      unitRefs,
+      item,
+      items,
+      trace
+    );
+    if (reconciled) return reconciled;
     trace.mark('snapshot_received', 'refused');
     return { admitted: false, admittedUnitIds: [], pendingOutbox: item.status === 'unsent', snapshot };
   } catch {
     trace.mark('submit_failed', 'failed');
-    return { ...none, pendingOutbox: true };
+    const reconciled = await reconcileFailedTransmit(
+      session.barcode,
+      sendable,
+      unitRefs,
+      item,
+      items,
+      trace
+    );
+    return reconciled ?? { ...none, pendingOutbox: true };
   }
 }
 
