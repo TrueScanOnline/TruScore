@@ -62,8 +62,8 @@
 | FM-03 photo CTA retired; FM-03R CTA retained | Done |
 | `.env.development` / founders EAS GUIDED=0; PRESELECTED default-deny | Done |
 | Regression tests (policy, FM-03R, menus empty, 15/25 pathway) | **57 PASS** in targeted suite |
-| UAT backend redeploy + policy 403 probes | *(fill after deploy)* |
-| Android clean-bundle visual | Pending independent acceptance |
+| UAT backend redeploy + policy 403 probes | **PASS** — `dpl_4PtMCMM8Mk3EDtvZK6T5jpGS2V2g` aliased to `truscoreapi-uat`; photo/manual/EA image/manual-text → **403** `mvp_preselected_only_v1_20261118` |
+| Android clean-bundle visual | Pending independent acceptance (not completed this tip) |
 | iOS TestFlight visual | Pending / not run this tip |
 
 **Policy version:** `mvp_preselected_only_v1_20261118` (default-deny activation; supersedes rejected opt-in reading of same date stamp).
@@ -136,6 +136,7 @@ Until then: **client solicitation remains the NR gate**; server still admits att
 | Containment (valid) | `956886b7eb60f87de75c82082f0e43ee8a4efbb9` |
 | Rejected restore | `b752fdf567a9ff7e36e6b24f1d5e45d1bb35fd23` |
 | Corrective implementation | `e36ed7aa05c31abaea88516bac514a8d690b546b` |
-| UAT deploy | *(fill after deploy)* |
+| Docs stamp tip | `44ea09e` (+ deploy evidence stamp below) |
+| UAT deploy | `dpl_4PtMCMM8Mk3EDtvZK6T5jpGS2V2g` → `https://truscoreapi-uat.vercel.app` |
 
 **STOP for independent acceptance review. Do not declare restoration complete solely because buttons are visible.**

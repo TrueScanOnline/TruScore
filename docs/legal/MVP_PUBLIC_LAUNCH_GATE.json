@@ -596,9 +596,8 @@
         "status": "MVP_PRESELECTED_ONLY_CORRECTIVE_RECONCILIATION_NONBINDING",
         "title": "Corrective: reaffirm preselected-only MVP; reject free-form restore as product baseline",
         "meaning": "Nonbinding. Founder rejected restoration acceptance pending full historical reconciliation. Reaffirms 17 Nov default-deny preselected-only; retires Camera/Gallery/free-form/FM-03 photo for MVP; keeps FM-03R when Claims NR eligible; verifies 15/25 pathway via methodology unit tests without UI hardcode. Server Claims-NR publication gate remains AMBER/RED awaiting founder approval to couple EA admission to publication. publicReleaseStatus stays BLOCKED.",
-        "verificationStatus": "SOURCE_CORRECTIVE_IMPLEMENTED_UAT_REDEPLOY_AND_DEVICE_MATRIX_PENDING",
+        "verificationStatus": "SOURCE_CORRECTIVE_IMPLEMENTED_UAT_POLICY_403_PROBES_PASS_DEVICE_MATRIX_PENDING",
         "openConditions": [
-          "Vercel UAT must be redeployed from the corrective tip and independently probed for policy 403s.",
           "Server Claims-NR enforcement for FM-03R remains deferred AMBER/RED (do not invent EA↔publication coupling without founder approval).",
           "Governed catalogue-only consumer paths remain deferred; no invented taxonomies.",
           "Android clean-bundle and iOS TestFlight visual acceptance remain outstanding.",
@@ -608,7 +607,8 @@
           "docs/uat/FOUNDER_APPROVED_MVP_FUNCTIONALITY_REGISTER_20261118.md",
           "src/config/mvpContributionInputPolicy.ts",
           "backend/vercel/lib/mvpContributionInputPolicy.ts",
-          "app/result/[barcode].tsx"
+          "app/result/[barcode].tsx",
+          "UAT deploy dpl_4PtMCMM8Mk3EDtvZK6T5jpGS2V2g"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
       }
