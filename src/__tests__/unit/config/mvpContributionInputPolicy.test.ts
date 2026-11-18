@@ -19,6 +19,7 @@ import {
   isClaimsAbsenceAttestationContributionEnabled,
   isGuidedContributionSubmitEnabled,
 } from '../../../config/mvpFeatureGates';
+
 describe('mvpContributionInputPolicy', () => {
   const prev = process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
   const prevAuth = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
@@ -33,8 +34,18 @@ describe('mvpContributionInputPolicy', () => {
     else process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = prevGuided;
   });
 
-  it('default-denies photos, free text, manual product and VLM', () => {
+  it('is inactive by default after founder 2026-11-18 restore (opt-in containment)', () => {
     delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+    expect(isMvpPreselectedOnlyConsumerPolicyActive()).toBe(false);
+    expect(isConsumerPhotoEvidenceContributionAllowed()).toBe(true);
+    expect(isConsumerManualProductContributionAllowed()).toBe(true);
+    expect(isConsumerFreeFormGuidedContributionAllowed()).toBe(true);
+    expect(isConsumerVlmOcrContributionAllowed()).toBe(true);
+    expect(MVP_CONTRIBUTION_INPUT_POLICY_VERSION).toContain('mvp_preselected_only');
+  });
+
+  it('when explicitly active, denies photos, free text, manual product and VLM', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     expect(isMvpPreselectedOnlyConsumerPolicyActive()).toBe(true);
     expect(isConsumerPhotoEvidenceContributionAllowed()).toBe(false);
     expect(isConsumerManualProductContributionAllowed()).toBe(false);
@@ -42,16 +53,18 @@ describe('mvpContributionInputPolicy', () => {
     expect(isConsumerVlmOcrContributionAllowed()).toBe(false);
     expect(isMvpConsumerInputClassPermitted('packet_absence_user_attestation')).toBe(true);
     expect(isMvpConsumerInputClassPermitted('photo_camera')).toBe(false);
-    expect(MVP_CONTRIBUTION_INPUT_POLICY_VERSION).toContain('mvp_preselected_only');
   });
 
-  it('supersedes discovery free-text without mutating the immutable asset', () => {
+  it('restores discovery free-text when policy is inactive; overlays when active', () => {
+    delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+    expect(discoveryFreeTextConsumerSubmissionAvailable()).toBe(true);
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     expect(MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION.free_text_is_always_available).toBe(false);
     expect(discoveryFreeTextConsumerSubmissionAvailable()).toBe(false);
     expect(mvpDiscoveryInputRestriction().unmatched_action).toContain('unavailable');
   });
 
-  it('keeps FM-03R available while free-form guided stays off', () => {
+  it('keeps FM-03R available while free-form guided stays off under active policy', () => {
     process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
@@ -59,7 +72,7 @@ describe('mvpContributionInputPolicy', () => {
     expect(isClaimsAbsenceAttestationContributionEnabled()).toBe(true);
   });
 
-  it('contains VLM/OCR activation in extraction.ts under the policy', () => {
+  it('contains VLM/OCR activation in extraction.ts under the policy helper', () => {
     const fs = require('fs') as typeof import('fs');
     const path = require('path') as typeof import('path');
     const src = fs.readFileSync(

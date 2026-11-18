@@ -575,6 +575,20 @@
           "docs/uat/MVP_PRESELECTED_ONLY_CONTRIBUTION_CONTAINMENT_20261117.md"
         ],
         "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
+      },
+      {
+        "date": "2026-11-18",
+        "reviewer": "Cursor engineering (founder contribution restore directive)",
+        "status": "MVP_CONTRIBUTION_FUNCTIONALITY_RESTORE_NONBINDING",
+        "title": "Founder restore of pre-containment contribution journeys",
+        "meaning": "Nonbinding. Founder directed restoration of previously approved guided/photo/manual contribution journeys. Preselected-only policy is now opt-in (inactive by default). UAT redeployed dpl_CnW7TWKFNyyaVUfD43VnAR3y72yK. Does not clear public release or approve legal requirements.",
+        "verificationStatus": "SOURCE_RESTORED_UAT_POLICY_INACTIVE_PROBES_PASS_DEVICE_MATRIX_PENDING",
+        "relevantEvidence": [
+          "docs/uat/MVP_CONTRIBUTION_FUNCTIONALITY_RESTORE_20261118.md",
+          "src/config/mvpContributionInputPolicy.ts",
+          "backend/vercel/lib/mvpContributionInputPolicy.ts"
+        ],
+        "approvalEffect": "NONE: never change publicReleaseStatus, requirements[].status, finalApproval, source-commit attestation or legalDestinations readiness because of this milestone."
       }
     ]
   },

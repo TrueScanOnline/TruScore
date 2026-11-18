@@ -68,8 +68,8 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
   const prevEnv = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
   const prevPreselected = process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
 
-  beforeAll(() => {
-    // Preselected-only MVP: free-form/photo guided OFF; FM-03R attestation ON via authority env.
+  beforeEach(() => {
+    // Suite default: policy active so FM-03R-only path can be asserted independently of guided.
     process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
@@ -92,7 +92,7 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     expect(result).toContain('CLAIMS_PACKET_ABSENCE_PILLAR_LABEL');
     expect(result).toContain('submitClaimsAbsenceAttestationFromPillar');
     expect(result).toContain("publicationHold?.status === 'held'");
-    expect(result).toContain('FM-03 photographed absence retired');
+    expect(result).toContain('result-packet-fm03-photo-absence');
   });
 
   it('allows FM-03R only for Claims NR with live opportunity and no contradiction', () => {
@@ -101,8 +101,15 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     const actions = resultContributionActions(current);
     expect(claimsPacketAbsencePillarIneligibilityReason(current, pub, actions)).toBeNull();
     expect(claimsPacketAbsencePillarEligible(current, pub, actions)).toBe(true);
-    // Photo FM-03 retired from MVP consumer entry under preselected-only.
-    expect(packetClaimsPhotoAbsenceDiscoverable(current)).toBe(false);
+  });
+
+  it('restores photo FM-03 discoverability when guided contribution is entitled', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    const pub = publication({});
+    const current = product(pub);
+    expect(packetClaimsPhotoAbsenceDiscoverable(current)).toBe(true);
   });
 
   it('rejects FM-03R for Claims Rated without broadening gates', () => {

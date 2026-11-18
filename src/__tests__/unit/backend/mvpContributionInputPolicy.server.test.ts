@@ -1,5 +1,6 @@
 /**
- * Server policy module — proves prohibited writes are rejected before storage semantics.
+ * Server policy module — proves prohibited writes are rejected before storage
+ * when preselected-only is explicitly active (opt-in after 2026-11-18 restore).
  *
  * @jest-environment node
  */
@@ -20,13 +21,15 @@ describe('server mvpContributionInputPolicy', () => {
     else process.env.RVEEL_MVP_PRESELECTED_ONLY = prev;
   });
 
-  it('is active by default', () => {
+  it('is inactive by default (founder 2026-11-18 restore — opt-in)', () => {
     delete process.env.RVEEL_MVP_PRESELECTED_ONLY;
-    expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(true);
+    expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(false);
+    expect(rejectConsumerPhotoUploadIfPolicyActive({}).ok).toBe(true);
+    expect(rejectConsumerManualProductWriteIfPolicyActive({}).ok).toBe(true);
   });
 
-  it('rejects consumer photo uploads before storage', () => {
-    delete process.env.RVEEL_MVP_PRESELECTED_ONLY;
+  it('rejects consumer photo uploads before storage when active', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
     const denied = rejectConsumerPhotoUploadIfPolicyActive({});
     expect(denied.ok).toBe(false);
     if (!denied.ok) {
@@ -36,7 +39,8 @@ describe('server mvpContributionInputPolicy', () => {
     }
   });
 
-  it('rejects consumer manual-product POSTs', () => {
+  it('rejects consumer manual-product POSTs when active', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
     const denied = rejectConsumerManualProductWriteIfPolicyActive({});
     expect(denied.ok).toBe(false);
     if (!denied.ok) {
@@ -44,7 +48,8 @@ describe('server mvpContributionInputPolicy', () => {
     }
   });
 
-  it('rejects EA photo and manual-text finalisation actions', () => {
+  it('rejects EA photo and manual-text finalisation actions when active', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
     for (const action of [
       'authorize-evidence-image',
       'finalize-evidence-image',
@@ -55,7 +60,8 @@ describe('server mvpContributionInputPolicy', () => {
     }
   });
 
-  it('allows FM-03R attestation finalise and attestation-only submit', () => {
+  it('allows FM-03R attestation finalise and attestation-only submit when active', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
     expect(
       rejectEvidenceAuthorityActionIfPolicyActive({
         action: 'finalize-packet-absence-attestation',
@@ -88,7 +94,8 @@ describe('server mvpContributionInputPolicy', () => {
     ).toBe(true);
   });
 
-  it('allows founder-admin bypass only with matching token', () => {
+  it('allows founder-admin bypass only with matching token when policy active', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '1';
     const denied = rejectConsumerPhotoUploadIfPolicyActive({
       adminHeader: 'wrong',
       founderAdminToken: 'founder-secret-token',

@@ -39,15 +39,17 @@ describe('FM-03R Claims packet-absence direct attestation entry', () => {
     expect(lookThrough).toContain('contributeButtonSecondary');
   });
 
-  it('retains post-MVP packet_absence capture infrastructure but retires it from MVP consumer entry', () => {
+  it('keeps FM-03R pillar photo-free while restoring guided FM-03 photo entry', () => {
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
     expect(modal).toContain("entryIntent?: 'default' | 'packet_absence'");
     expect(modal).toContain("preferCaptureForAbsence = entryIntentRef.current === 'packet_absence'");
     expect(modal).toContain('Opening alone must not select or admit absence');
-    // Pillar absence remains photo-free FM-03R only; photographed FM-03 is not consumer-reachable under MVP.
+    // Claims pillar absence action remains photo-free FM-03R (attestation).
     expect(result).not.toContain("link.entryIntent === 'packet_absence' ? 'packet_absence'");
-    expect(result).toContain('FM-03 photographed absence retired');
+    // Founder 2026-11-18 restore: photo-supported FM-03 is consumer-reachable again via guided modal.
+    expect(result).toContain('result-packet-fm03-photo-absence');
+    expect(result).toContain("openContribution('packetClaims', 'add', false, 'packet_absence')");
     expect(result).toContain('isGuidedContributionSubmitEnabled()');
   });
 

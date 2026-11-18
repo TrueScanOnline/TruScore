@@ -1,19 +1,20 @@
 /**
- * Rveel MVP consumer contribution input policy — preselected-only (2026-11-17).
+ * Rveel MVP consumer contribution input policy — preselected-only (dormant / opt-in).
  *
- * Founder decision: before MVP, all consumer product-evidence contributions must use
- * Rveel predefined selectable options / authorised attestations. Default-deny.
+ * History: 2026-11-17 introduced default-deny containment. Founder directive
+ * 2026-11-18 restores previously approved guided contribution journeys; this
+ * policy is therefore **inactive unless explicitly set to '1'**.
  *
- * Photos, gallery, uploads, free text, arbitrary nutrition/percentages, unrestricted
- * manual product wording, and VLM/OCR are prohibited for ordinary consumers.
+ * When active (EXPO_PUBLIC_MVP_PRESELECTED_ONLY=1): photos, gallery, uploads,
+ * free text, unrestricted manual product wording, and VLM/OCR are prohibited.
+ * When inactive (default): founder-approved guided / photo / manual journeys
+ * resume under existing entitlement gates and Evidence Authority architecture.
  *
- * This policy does not change scoring, Evidence Authority admission meaning, or
- * historical evidence. Flip EXPO_PUBLIC_MVP_PRESELECTED_ONLY=0 only with explicit
- * founder post-MVP approval (not a routine UAT entitlement).
+ * This module does not change scoring or Evidence Authority admission meaning.
  */
 
 export const MVP_CONTRIBUTION_INPUT_POLICY_ID = 'mvp_preselected_only_v1';
-export const MVP_CONTRIBUTION_INPUT_POLICY_DATE = '20261117';
+export const MVP_CONTRIBUTION_INPUT_POLICY_DATE = '20261118';
 export const MVP_CONTRIBUTION_INPUT_POLICY_VERSION = `${MVP_CONTRIBUTION_INPUT_POLICY_ID}_${MVP_CONTRIBUTION_INPUT_POLICY_DATE}`;
 
 /** Consumer input classes considered under this policy. */
@@ -71,9 +72,12 @@ export const MVP_DEFERRED_GOVERNED_CHOICE_CLASSES: readonly MvpConsumerContribut
   'governed_packet_claim_option',
 ] as const;
 
-/** Default-deny. Explicit '0' required to deactivate (post-MVP only). */
+/**
+ * Opt-in containment. Inactive by default after founder 2026-11-18 restore.
+ * Set EXPO_PUBLIC_MVP_PRESELECTED_ONLY=1 only with explicit founder direction.
+ */
 export function isMvpPreselectedOnlyConsumerPolicyActive(): boolean {
-  return process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY !== '0';
+  return process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY === '1';
 }
 
 export function isMvpConsumerInputClassPermitted(

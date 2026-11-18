@@ -1760,10 +1760,10 @@ function ResultScreenContent() {
     formFirst = false,
     entryIntent: 'default' | 'packet_absence' = 'default'
   ) => {
-    // MVP preselected-only: free-form guided (photos / typed evidence) stays closed.
-    // FM-03R uses submitClaimsAbsenceAttestation — never this modal.
+    // Guided modal stays closed when entitlement/policy gates deny free-form submit.
+    // FM-03R attestation uses submitClaimsAbsenceAttestation — not this modal.
+    // entryIntent 'packet_absence' is the photo-supported FM-03 path (restored).
     if (!isGuidedContributionSubmitEnabled()) return;
-    if (entryIntent === 'packet_absence') return;
     setContributionEntry(entry);
     setContributionJourney(journey);
     setContributionFormFirst(formFirst);
@@ -3741,8 +3741,33 @@ function ResultScreenContent() {
                     ) : null}
                   </TouchableOpacity>
                 ) : null}
-                {/* FM-03 photographed absence retired from MVP consumer entry (preselected-only).
-                    Post-MVP reactivation would call packetClaimsPhotoAbsenceDiscoverable + openContribution(..., 'packet_absence'). */}
+                {packetClaimsPhotoAbsenceDiscoverable(product) ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      openContribution('packetClaims', 'add', false, 'packet_absence');
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Confirm absence with a pack photo"
+                    testID="result-packet-fm03-photo-absence"
+                    style={{
+                      minHeight: 56,
+                      borderRadius: 14,
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: emerald.line,
+                      paddingHorizontal: 14,
+                      justifyContent: 'center',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Text style={{ color: emerald.ink, fontSize: 17, fontWeight: '700' }}>
+                      Confirm absence with a pack photo
+                    </Text>
+                    <Text style={{ color: emerald.muted, fontSize: 13, marginTop: 4 }}>
+                      Photo-supported route. Attach a supporting pack image before the confirmation becomes
+                      available. Opening alone does not admit an absence.
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
               </>
             ) : null}
             {contributionChoice === 'origins' ? (
