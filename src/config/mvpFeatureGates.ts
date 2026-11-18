@@ -1,12 +1,12 @@
 /**
  * Rveel MVP feature gates — production-default OFF for optional surfaces.
  *
- * Guided contribution requires EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION=1 and authority env.
- * Preselected-only containment (when explicitly EXPO_PUBLIC_MVP_PRESELECTED_ONLY=1)
- * blocks free-form guided even if entitled. Founder 2026-11-18 restore: policy inactive
- * by default so UAT/dev guided journeys resume when entitled.
+ * Founder 2026-11-17 / 2026-11-18 corrective: consumer product-evidence is
+ * preselected-only. Free-form guided contribution (photos / free text) stays
+ * OFF while that policy is active, even if an older UAT entitlement set
+ * EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION=1.
  *
- * FM-03R photo-free Claims absence attestation remains separately permitted.
+ * FM-03R photo-free Claims absence attestation is separately permitted.
  */
 
 import { expectedAuthorityEnv } from '../evidenceAuthority/assessment';

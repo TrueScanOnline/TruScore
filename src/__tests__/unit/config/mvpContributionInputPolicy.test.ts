@@ -34,17 +34,17 @@ describe('mvpContributionInputPolicy', () => {
     else process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = prevGuided;
   });
 
-  it('is inactive by default after founder 2026-11-18 restore (opt-in containment)', () => {
+  it('is active by default (founder 2026-11-18 corrective — default-deny)', () => {
     delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
-    expect(isMvpPreselectedOnlyConsumerPolicyActive()).toBe(false);
-    expect(isConsumerPhotoEvidenceContributionAllowed()).toBe(true);
-    expect(isConsumerManualProductContributionAllowed()).toBe(true);
-    expect(isConsumerFreeFormGuidedContributionAllowed()).toBe(true);
-    expect(isConsumerVlmOcrContributionAllowed()).toBe(true);
-    expect(MVP_CONTRIBUTION_INPUT_POLICY_VERSION).toContain('mvp_preselected_only');
+    expect(isMvpPreselectedOnlyConsumerPolicyActive()).toBe(true);
+    expect(isConsumerPhotoEvidenceContributionAllowed()).toBe(false);
+    expect(isConsumerManualProductContributionAllowed()).toBe(false);
+    expect(isConsumerFreeFormGuidedContributionAllowed()).toBe(false);
+    expect(isConsumerVlmOcrContributionAllowed()).toBe(false);
+    expect(MVP_CONTRIBUTION_INPUT_POLICY_VERSION).toBe('mvp_preselected_only_v1_20261118');
   });
 
-  it('when explicitly active, denies photos, free text, manual product and VLM', () => {
+  it('denies photos, free text, manual product and VLM while active', () => {
     process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     expect(isMvpPreselectedOnlyConsumerPolicyActive()).toBe(true);
     expect(isConsumerPhotoEvidenceContributionAllowed()).toBe(false);
@@ -55,10 +55,8 @@ describe('mvpContributionInputPolicy', () => {
     expect(isMvpConsumerInputClassPermitted('photo_camera')).toBe(false);
   });
 
-  it('restores discovery free-text when policy is inactive; overlays when active', () => {
+  it('overlays discovery free-text as unavailable under preselected-only', () => {
     delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
-    expect(discoveryFreeTextConsumerSubmissionAvailable()).toBe(true);
-    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
     expect(MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION.free_text_is_always_available).toBe(false);
     expect(discoveryFreeTextConsumerSubmissionAvailable()).toBe(false);
     expect(mvpDiscoveryInputRestriction().unmatched_action).toContain('unavailable');
@@ -70,6 +68,12 @@ describe('mvpContributionInputPolicy', () => {
     process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
     expect(isGuidedContributionSubmitEnabled()).toBe(false);
     expect(isClaimsAbsenceAttestationContributionEnabled()).toBe(true);
+  });
+
+  it('deactivates only with explicit PRESELECTED_ONLY=0 (post-MVP)', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
+    expect(isMvpPreselectedOnlyConsumerPolicyActive()).toBe(false);
+    expect(isConsumerPhotoEvidenceContributionAllowed()).toBe(true);
   });
 
   it('contains VLM/OCR activation in extraction.ts under the policy helper', () => {

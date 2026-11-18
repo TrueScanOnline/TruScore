@@ -61,10 +61,10 @@ global.fetch = jest.fn();
 // Production/store builds remain default-OFF via app.config.js / eas.json.
 // Founder 2026-11-18 restore: match pre-containment test entitlement; preselected-only is opt-in.
 if (process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION === undefined) {
-  process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+  process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '0';
 }
 if (process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY === undefined) {
-  process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
+  process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
 }
 if (process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV === undefined) {
   process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';

@@ -91,6 +91,33 @@ function product(input: {
 const open = { publicationSettled: true as const };
 
 describe('voluntary contribution offer', () => {
+  const prevGuided = process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION;
+  const prevPreselected = process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+  const prevAuth = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+
+  beforeEach(() => {
+    // Composition tests exercise post-MVP / entitled free-form offers.
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+  });
+
+  afterAll(() => {
+    if (prevGuided === undefined) delete process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION;
+    else process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = prevGuided;
+    if (prevPreselected === undefined) delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+    else process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = prevPreselected;
+    if (prevAuth === undefined) delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+    else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = prevAuth;
+  });
+
+  it('returns no free-form rows under MVP preselected-only default-deny', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    expect(voluntaryContributionOffer(product(), open)).toEqual([]);
+  });
+
   it('lists Change and the independent origin and packet Add rows when every pillar is Rated', () => {
     const labels = voluntaryContributionOffer(product(), open).map((row) => row.label);
     expect(labels).toEqual([

@@ -5,10 +5,7 @@
  */
 
 import { displayNameForCertification } from './resolveCertification';
-import {
-  isMvpPreselectedOnlyConsumerPolicyActive,
-  MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION,
-} from '../config/mvpContributionInputPolicy';
+import { MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION } from '../config/mvpContributionInputPolicy';
 import asset from './governed/packet_certification_manual_discovery_v1_0_1.json';
 import selectionRegister from './governed/packet_certification_selection_v1_0_3.json';
 
@@ -18,16 +15,16 @@ export const DISCOVERY_ASSET_VERSION = '1.0.3';
 
 /**
  * MVP overlay — does not mutate immutable discovery JSON.
- * Restriction object applies only while preselected-only policy is explicitly active.
+ * Free-text packet wording is unavailable under preselected-only.
  */
 export function mvpDiscoveryInputRestriction() {
   return MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION;
 }
 
 export function discoveryFreeTextConsumerSubmissionAvailable(): boolean {
-  if (isMvpPreselectedOnlyConsumerPolicyActive()) return false;
-  // Immutable discovery asset historically declares free text available.
-  return (asset as { free_text_is_always_available?: boolean }).free_text_is_always_available !== false;
+  // MVP overlay hard-disables free-text; immutable asset may still declare true historically.
+  void MVP_PACKET_CERTIFICATION_INPUT_RESTRICTION;
+  return false;
 }
 
 export type DiscoveryTreatment =

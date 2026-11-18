@@ -1,6 +1,6 @@
 /**
- * Empty Packet Claims Add reconciles FM-03R (photo-free) and FM-03 (photo-supported).
- * Does not broaden FM-03R eligibility beyond Claims NR gates.
+ * Empty Packet Claims Add reconciles FM-03R (photo-free) under MVP preselected-only.
+ * FM-03 photo entry remains retired. Does not broaden FM-03R eligibility beyond Claims NR.
  */
 
 import fs from 'fs';
@@ -92,7 +92,7 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     expect(result).toContain('CLAIMS_PACKET_ABSENCE_PILLAR_LABEL');
     expect(result).toContain('submitClaimsAbsenceAttestationFromPillar');
     expect(result).toContain("publicationHold?.status === 'held'");
-    expect(result).toContain('result-packet-fm03-photo-absence');
+    expect(result).not.toContain('result-packet-fm03-photo-absence');
   });
 
   it('allows FM-03R only for Claims NR with live opportunity and no contradiction', () => {
@@ -103,13 +103,10 @@ describe('Packet Claims FM-03 / FM-03R entry reconciliation', () => {
     expect(claimsPacketAbsencePillarEligible(current, pub, actions)).toBe(true);
   });
 
-  it('restores photo FM-03 discoverability when guided contribution is entitled', () => {
-    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
-    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
-    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+  it('keeps photo FM-03 undiscoverable while preselected-only is active', () => {
     const pub = publication({});
     const current = product(pub);
-    expect(packetClaimsPhotoAbsenceDiscoverable(current)).toBe(true);
+    expect(packetClaimsPhotoAbsenceDiscoverable(current)).toBe(false);
   });
 
   it('rejects FM-03R for Claims Rated without broadening gates', () => {

@@ -1,17 +1,19 @@
 /**
  * Server mirror of MVP preselected-only consumer contribution policy.
  *
- * Founder 2026-11-18: restore previously approved contribution journeys.
- * Policy is **opt-in** — inactive unless RVEEL_MVP_PRESELECTED_ONLY=1.
- * When active, reject prohibited writes before storage / finalisation.
- * Founder-admin bypass requires matching RVEEL_FOUNDER_ADMIN_TOKEN on
- * X-Rveel-Founder-Admin (explicit, not consumer-reachable).
+ * Founder 2026-11-17 default-deny; founder 2026-11-18 corrective reaffirms it
+ * after the rejected free-form restore. Must reject prohibited writes before
+ * storage / finalisation.
+ *
+ * RVEEL_MVP_PRESELECTED_ONLY=0 deactivates (post-MVP founder approval only).
+ * Ordinary consumers have no bypass. Founder-admin bypass requires matching
+ * RVEEL_FOUNDER_ADMIN_TOKEN on X-Rveel-Founder-Admin (explicit, not consumer-reachable).
  */
 
 export const MVP_CONTRIBUTION_INPUT_POLICY_VERSION = 'mvp_preselected_only_v1_20261118';
 
 export function isMvpPreselectedOnlyPolicyActiveServer(): boolean {
-  return process.env.RVEEL_MVP_PRESELECTED_ONLY === '1';
+  return process.env.RVEEL_MVP_PRESELECTED_ONLY !== '0';
 }
 
 export function founderAdminAuthorizesMvpPolicyBypass(

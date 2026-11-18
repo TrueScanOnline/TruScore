@@ -103,6 +103,34 @@ const six = [
 ];
 
 describe('product information menu', () => {
+  const prevGuided = process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION;
+  const prevPreselected = process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+  const prevAuth = process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+
+  beforeEach(() => {
+    // Composition tests exercise post-MVP / entitled free-form menus.
+    // MVP default-deny emptiness is covered separately below.
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '0';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+  });
+
+  afterAll(() => {
+    if (prevGuided === undefined) delete process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION;
+    else process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = prevGuided;
+    if (prevPreselected === undefined) delete process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY;
+    else process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = prevPreselected;
+    if (prevAuth === undefined) delete process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV;
+    else process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = prevAuth;
+  });
+
+  it('returns no free-form rows under MVP preselected-only default-deny', () => {
+    process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY = '1';
+    process.env.EXPO_PUBLIC_MVP_GUIDED_CONTRIBUTION = '1';
+    process.env.EXPO_PUBLIC_EVIDENCE_AUTHORITY_ENV = 'uat';
+    expect(productInformationMenu(product(), open)).toEqual([]);
+  });
+
   it('keeps voluntary paths on a fully assessed Rated product, including a published zero', () => {
     expect(productInformationMenu(product(), open).map((row) => row.label)).toEqual(six);
     expect(productInformationMenu(product({ publishedScore: 0 }), open).map((row) => row.label)).toEqual(six);

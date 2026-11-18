@@ -156,11 +156,12 @@ export function claimsPacketAbsencePillarEligible(
 }
 
 /**
- * Photo-supported FM-03 absence — available when guided contribution is entitled
- * (and preselected-only policy is not explicitly active).
+ * Photo-supported FM-03 absence — retired from MVP consumer entry under preselected-only.
+ * Always false while photos are prohibited; retained for post-MVP reactivation only.
  */
 export function packetClaimsPhotoAbsenceDiscoverable(product: Product): boolean {
   if (!isGuidedContributionSubmitEnabled()) return false;
+  // Free-form guided also implies photos; still fail closed under preselected-only via that gate.
   if (product.rveelPacketAbsenceEstablished === true) return false;
   return !claimsPacketAbsenceContradicted(product);
 }

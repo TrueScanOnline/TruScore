@@ -1,6 +1,6 @@
 /**
  * Server policy module — proves prohibited writes are rejected before storage
- * when preselected-only is explicitly active (opt-in after 2026-11-18 restore).
+ * under default-deny preselected-only (founder 2026-11-18 corrective).
  *
  * @jest-environment node
  */
@@ -21,11 +21,11 @@ describe('server mvpContributionInputPolicy', () => {
     else process.env.RVEEL_MVP_PRESELECTED_ONLY = prev;
   });
 
-  it('is inactive by default (founder 2026-11-18 restore — opt-in)', () => {
+  it('is active by default (founder 2026-11-18 corrective — default-deny)', () => {
     delete process.env.RVEEL_MVP_PRESELECTED_ONLY;
-    expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(false);
-    expect(rejectConsumerPhotoUploadIfPolicyActive({}).ok).toBe(true);
-    expect(rejectConsumerManualProductWriteIfPolicyActive({}).ok).toBe(true);
+    expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(true);
+    expect(rejectConsumerPhotoUploadIfPolicyActive({}).ok).toBe(false);
+    expect(rejectConsumerManualProductWriteIfPolicyActive({}).ok).toBe(false);
   });
 
   it('rejects consumer photo uploads before storage when active', () => {
@@ -106,5 +106,11 @@ describe('server mvpContributionInputPolicy', () => {
       founderAdminToken: 'founder-secret-token',
     });
     expect(allowed.ok).toBe(true);
+  });
+
+  it('deactivates only with explicit RVEEL_MVP_PRESELECTED_ONLY=0', () => {
+    process.env.RVEEL_MVP_PRESELECTED_ONLY = '0';
+    expect(isMvpPreselectedOnlyPolicyActiveServer()).toBe(false);
+    expect(rejectConsumerPhotoUploadIfPolicyActive({}).ok).toBe(true);
   });
 });

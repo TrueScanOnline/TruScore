@@ -1,14 +1,14 @@
 /**
- * Rveel MVP consumer contribution input policy — preselected-only (dormant / opt-in).
+ * Rveel MVP consumer contribution input policy — preselected-only.
  *
- * History: 2026-11-17 introduced default-deny containment. Founder directive
- * 2026-11-18 restores previously approved guided contribution journeys; this
- * policy is therefore **inactive unless explicitly set to '1'**.
+ * Founder 2026-11-17: default-deny photos / gallery / free text / VLM / manual
+ * product. Founder 2026-11-18 corrective: reject the free-form “restore”
+ * (b752fdf) and reaffirm this contract. FM-03R attestation and WP09 agree
+ * remain the only permitted consumer product-evidence writes when otherwise
+ * eligible.
  *
- * When active (EXPO_PUBLIC_MVP_PRESELECTED_ONLY=1): photos, gallery, uploads,
- * free text, unrestricted manual product wording, and VLM/OCR are prohibited.
- * When inactive (default): founder-approved guided / photo / manual journeys
- * resume under existing entitlement gates and Evidence Authority architecture.
+ * Flip EXPO_PUBLIC_MVP_PRESELECTED_ONLY=0 only with explicit founder
+ * post-MVP approval (not a routine UAT entitlement).
  *
  * This module does not change scoring or Evidence Authority admission meaning.
  */
@@ -72,12 +72,9 @@ export const MVP_DEFERRED_GOVERNED_CHOICE_CLASSES: readonly MvpConsumerContribut
   'governed_packet_claim_option',
 ] as const;
 
-/**
- * Opt-in containment. Inactive by default after founder 2026-11-18 restore.
- * Set EXPO_PUBLIC_MVP_PRESELECTED_ONLY=1 only with explicit founder direction.
- */
+/** Default-deny. Explicit '0' required to deactivate (post-MVP only). */
 export function isMvpPreselectedOnlyConsumerPolicyActive(): boolean {
-  return process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY === '1';
+  return process.env.EXPO_PUBLIC_MVP_PRESELECTED_ONLY !== '0';
 }
 
 export function isMvpConsumerInputClassPermitted(

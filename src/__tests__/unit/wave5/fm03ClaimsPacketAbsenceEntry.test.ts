@@ -1,7 +1,7 @@
 /**
  * FM-03R — Claims pillar photo-free packet-absence attestation entry.
  * Prior FM-03 photo journey wiring remains in PacketContributionModal but is not
- * invoked from the Claims pillar absence action.
+ * invoked from the Claims pillar absence action under MVP preselected-only.
  */
 
 import fs from 'fs';
@@ -39,7 +39,7 @@ describe('FM-03R Claims packet-absence direct attestation entry', () => {
     expect(lookThrough).toContain('contributeButtonSecondary');
   });
 
-  it('keeps FM-03R pillar photo-free while restoring guided FM-03 photo entry', () => {
+  it('keeps FM-03R pillar photo-free and retires FM-03 photo entry under preselected-only', () => {
     const modal = fs.readFileSync(path.join(REPO, 'src/components/PacketContributionModal.tsx'), 'utf8');
     const result = fs.readFileSync(path.join(REPO, 'app/result/[barcode].tsx'), 'utf8');
     expect(modal).toContain("entryIntent?: 'default' | 'packet_absence'");
@@ -47,10 +47,10 @@ describe('FM-03R Claims packet-absence direct attestation entry', () => {
     expect(modal).toContain('Opening alone must not select or admit absence');
     // Claims pillar absence action remains photo-free FM-03R (attestation).
     expect(result).not.toContain("link.entryIntent === 'packet_absence' ? 'packet_absence'");
-    // Founder 2026-11-18 restore: photo-supported FM-03 is consumer-reachable again via guided modal.
-    expect(result).toContain('result-packet-fm03-photo-absence');
-    expect(result).toContain("openContribution('packetClaims', 'add', false, 'packet_absence')");
-    expect(result).toContain('isGuidedContributionSubmitEnabled()');
+    // Founder 2026-11-18 corrective: FM-03 photo CTA not consumer-reachable under MVP.
+    expect(result).not.toContain('result-packet-fm03-photo-absence');
+    expect(result).toContain('result-packet-fm03r-absence');
+    expect(result).toContain("if (entryIntent === 'packet_absence') return");
   });
 
   it('does not hardcode Claims score 15 in the pillar entry UI path', () => {
