@@ -10,8 +10,9 @@ Engineering package only. `publicReleaseStatus: BLOCKED`.
 | Pre-containment baseline | `567a8ab1915db96ecec4a7ff3bfff3a249163da8` |
 | Containment | `956886b7eb60f87de75c82082f0e43ee8a4efbb9` |
 | **Restore implementation** | **`b752fdf567a9ff7e36e6b24f1d5e45d1bb35fd23`** |
-| Docs stamp tip (pushed) | `8c320723c972d204b0a595a3aa698d3679ba62db` |
-| Branch tip at package | `8c320723c972d204b0a595a3aa698d3679ba62db` on `build/w5-founders-native-20261114` |
+| Docs stamp tip | `8c320723c972d204b0a595a3aa698d3679ba62db` |
+| Acceptance package tip (this doc) | `83970a6c750c9621c9ef72754297737d61f425ae` |
+| Branch tip at STOP | `83970a6c750c9621c9ef72754297737d61f425ae` on `build/w5-founders-native-20261114` |
 | Deployed UAT backend | `dpl_CnW7TWKFNyyaVUfD43VnAR3y72yK` → `https://truscoreapi-uat.vercel.app` |
 | Policy version (dormant) | `mvp_preselected_only_v1_20261118` |
 
