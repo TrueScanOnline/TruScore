@@ -1,0 +1,11 @@
+{
+  "status": 200,
+  "success": true,
+  "originsPrevailing": [],
+  "withdrawnOrigins": [
+    "origins|grown_in",
+    "origins|made_in",
+    "origins|produced_in"
+  ],
+  "antarcticaInPrevailing": false
+}
