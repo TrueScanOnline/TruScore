@@ -1,0 +1,8 @@
+﻿at=2026-11-19T16:13:48.2893631+13:00
+alias=https://truscoreapi-uat.vercel.app
+deploy_id=dpl_AMuxeFSsPDzx2LjvDMJjeUpu36WV
+deploy_url=https://truscoreapi-9yuzpg06h-leightons-projects-d328c774.vercel.app
+status=Ready
+frontend_tip=46f3913d3e8ddddce5c944805892532cf99de70e
+policy_probe=mvp_preselected_only_v1_20261118
+compat_note=Structured Origins Packed-in Australia admitted seq 364 on Cadbury via this alias; GET snapshot authorised; POST action snapshot 403.

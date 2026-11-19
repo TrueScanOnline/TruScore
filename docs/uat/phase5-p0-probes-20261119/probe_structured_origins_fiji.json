@@ -1,0 +1,21 @@
+{
+  "finalizeStatus": 200,
+  "finalize": {
+    "ok": true,
+    "assetId": "asset_18240ddf7570",
+    "sha256": "eab21596303da5ad8d7bec771ed9e17c2603982fdf69816139fbc613c72b740f",
+    "contentType": "manual_text"
+  },
+  "submitStatus": 200,
+  "submitOutcome": "admitted",
+  "admissionSeq": [
+    363
+  ],
+  "originsPrevailing": [
+    {
+      "subjectKey": "origins|made_in",
+      "country": "Fiji",
+      "versionId": "ver_056f4af015dd"
+    }
+  ]
+}

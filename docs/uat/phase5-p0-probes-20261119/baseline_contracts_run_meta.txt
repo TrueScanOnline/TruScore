@@ -1,0 +1,3 @@
+﻿integration_sha=46f3913d3e8ddddce5c944805892532cf99de70e
+ran_at=2026-11-19T16:13:43.9879565+13:00
+suites=mvpBaselineContracts,reconcileAfterLostSubmitAck,mvpEaActionPolicy.snapshotRead,wp09PacketPersistenceAndCorrectPath

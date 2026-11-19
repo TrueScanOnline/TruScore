@@ -1,0 +1,21 @@
+﻿node.exe : PASS src/__tests__/unit/governance/mvpBaselineContracts.test.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (PASS src/__test...ntracts.test.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  MVP baseline permanent contracts
+    √ keeps preselected-only active by default (3 ms)
+    √ keeps FM-03R consumer label (1 ms)
+    √ keeps Agree≠Change surfaceGate contract (3 ms)
+    √ keeps dual-thumbs Correct unavailable path (no silent hide) (2 ms)
+    √ keeps Packet Claims shareable item and Result wiring (2 ms)
+    √ keeps transmit reconcile helpers (1 ms)
+    √ keeps canonical baseline document in repo (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        1.214 s
+Ran all test suites matching /src\\__tests__\\unit\\governance\\mvpBaselineContracts.test.ts/i.

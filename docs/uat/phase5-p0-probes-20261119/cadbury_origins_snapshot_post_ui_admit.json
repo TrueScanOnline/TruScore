@@ -1,0 +1,143 @@
+{
+  "at": "2026-11-19T03:10:52.921Z",
+  "deployHint": "dpl_AMuxeFSsPDzx2LjvDMJjeUpu36WV",
+  "status": 200,
+  "success": true,
+  "origins": [
+    {
+      "subjectKey": "origins|made_in",
+      "versionId": "ver_056f4af015dd",
+      "versionNo": 5,
+      "admissionSeq": 363,
+      "governance": "active",
+      "evidence": {
+        "state": "pending",
+        "domain": "origins",
+        "barcode": "9300617064879",
+        "claimKey": "made_in",
+        "disputes": [],
+        "admission": {
+          "admittedAt": 1795057151906,
+          "admittedBy": "wave4a-evidence-authority",
+          "ruleVersion": "wave4a.0-admission-v1",
+          "admissionReason": "server_wave4a_admission"
+        },
+        "createdAt": 1795057151906,
+        "updatedAt": 1795057151906,
+        "claimValue": "Fiji",
+        "evidenceId": "9300617064879|origins|made in|v5",
+        "submitterId": "[REDACTED]",
+        "exactWording": "",
+        "confirmations": [],
+        "admissionStatus": "admitted",
+        "evidenceVersion": 5,
+        "productionEpoch": "wave4a.uat",
+        "scoringEligible": true,
+        "originStructured": {
+          "claimType": "made_in",
+          "primaryCountry": "Fiji",
+          "percentageNotStated": true
+        },
+        "canonicalPromoted": false,
+        "receiverEligibility": {
+          "open_origins": {
+            "reason": "admitted origins evidence × open_v15 receiving methodology",
+            "eligible": true,
+            "methodologyId": "open_v15",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "v15"
+          },
+          "claims_packet": {
+            "reason": "not_evaluated",
+            "eligible": false,
+            "methodologyId": "claims_rescue_v0_2",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "v0.2"
+          },
+          "ethics_certifications": {
+            "reason": "not_evaluated",
+            "eligible": false,
+            "methodologyId": "ethics_pillar",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "as_built"
+          },
+          "body_ingredients_nutrition": {
+            "reason": "No approved Body receiving methodology is registered in Wave 4A.0.",
+            "eligible": false,
+            "methodologyId": "body_pillar",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "as_built"
+          }
+        }
+      }
+    },
+    {
+      "subjectKey": "origins|packed_in",
+      "versionId": "ver_cec13b917857",
+      "versionNo": 1,
+      "admissionSeq": 364,
+      "governance": "active",
+      "evidence": {
+        "state": "pending",
+        "domain": "origins",
+        "barcode": "9300617064879",
+        "claimKey": "packed_in",
+        "disputes": [],
+        "admission": {
+          "admittedAt": 1795057676166,
+          "admittedBy": "wave4a-evidence-authority",
+          "ruleVersion": "wave4a.0-admission-v1",
+          "admissionReason": "server_wave4a_admission"
+        },
+        "createdAt": 1795057676166,
+        "updatedAt": 1795057676166,
+        "claimValue": "Australia",
+        "evidenceId": "9300617064879|origins|packed in|v1",
+        "submitterId": "[REDACTED]",
+        "exactWording": "",
+        "confirmations": [],
+        "admissionStatus": "admitted",
+        "evidenceVersion": 1,
+        "productionEpoch": "wave4a.uat",
+        "scoringEligible": true,
+        "originStructured": {
+          "claimType": "packed_in",
+          "primaryCountry": "Australia",
+          "percentageNotStated": true
+        },
+        "canonicalPromoted": false,
+        "receiverEligibility": {
+          "open_origins": {
+            "reason": "admitted origins evidence × open_v15 receiving methodology",
+            "eligible": true,
+            "methodologyId": "open_v15",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "v15"
+          },
+          "claims_packet": {
+            "reason": "not_evaluated",
+            "eligible": false,
+            "methodologyId": "claims_rescue_v0_2",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "v0.2"
+          },
+          "ethics_certifications": {
+            "reason": "not_evaluated",
+            "eligible": false,
+            "methodologyId": "ethics_pillar",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "as_built"
+          },
+          "body_ingredients_nutrition": {
+            "reason": "No approved Body receiving methodology is registered in Wave 4A.0.",
+            "eligible": false,
+            "methodologyId": "body_pillar",
+            "basisRuleVersion": "wave4a.0-admission-v1",
+            "methodologyVersion": "as_built"
+          }
+        }
+      }
+    }
+  ],
+  "redaction": "submitter/contributor string fields redacted before commit; admissionSeq/GTIN/countries retained"
+}
